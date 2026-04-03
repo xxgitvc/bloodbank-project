@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - BloodBank Goa</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+nav{background:#CC0000;padding:14px 32px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,0.2)}
+.logo{color:#fff;font-size:22px;font-weight:bold;text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:8px}
+.nav-links a{color:#fff;text-decoration:none;font-size:14px;padding:7px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.4)}
+.nav-links a:hover{background:rgba(255,255,255,0.15)}
+.logout{background:#fff !important;color:#CC0000 !important;font-weight:bold;border:none !important}
+.user-pic{width:32px;height:32px;border-radius:50%;border:2px solid #fff;vertical-align:middle}
+.page-header{background:#1a1a1a;color:#fff;padding:32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.page-header h1{font-size:28px;font-weight:bold}
+.page-header p{font-size:14px;opacity:0.7;margin-top:4px}
+.admin-badge{background:#CC0000;color:#fff;font-size:12px;font-weight:bold;padding:4px 12px;border-radius:20px;margin-left:10px}
+.container{max-width:1200px;margin:0 auto;padding:32px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:36px}
+.stat-card{background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.stat-card h2{font-size:36px;font-weight:bold;color:#CC0000}
+.stat-card p{font-size:13px;color:#666;margin-top:4px}
+.stat-card.green h2{color:#2e7d32}
+.stat-card.blue h2{color:#0066CC}
+.stat-card.orange h2{color:#e65100}
+.tabs{display:flex;gap:0;margin-bottom:28px;border-radius:12px;overflow:hidden;border:1px solid #eee;width:fit-content;flex-wrap:wrap}
+.tab{padding:11px 20px;background:#f5f5f5;color:#666;font-size:14px;font-weight:bold;cursor:pointer;border:none;transition:all 0.2s}
+.tab.active{background:#CC0000;color:#fff}
+.tab:hover:not(.active){background:#ffe0e0;color:#CC0000}
+.tab-content{display:none}
+.tab-content.active{display:block}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+th{background:#CC0000;color:#fff;padding:12px 16px;text-align:left;font-size:13px;font-weight:bold}
+td{padding:12px 16px;font-size:13px;color:#333;border-bottom:1px solid #f0f0f0}
+tr:hover td{background:#fff5f5}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;font-size:11px;font-weight:bold;padding:3px 10px;border-radius:20px}
+.badge-red{background:#fff0f0;color:#CC0000}
+.badge-green{background:#e8f5e9;color:#2e7d32}
+.badge-orange{background:#fff3e0;color:#e65100}
+.badge-blue{background:#e3f2fd;color:#0066CC}
+.badge-govt{background:#f0fff0;color:#006600}
+.badge-pvt{background:#fff0f0;color:#CC0000}
+.action-btn{padding:6px 14px;border:none;border-radius:20px;font-size:12px;font-weight:bold;cursor:pointer}
+.btn-fulfill{background:#e8f5e9;color:#2e7d32}
+.btn-cancel{background:#fff0f0;color:#CC0000}
+.btn-fulfill:hover{background:#2e7d32;color:#fff}
+.btn-cancel:hover{background:#CC0000;color:#fff}
+.search-bar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.search-bar input{padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:14px;flex:1;min-width:200px;outline:none}
+.search-bar input:focus{border-color:#CC0000}
+.search-bar select{padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none}
+.empty{text-align:center;padding:40px;color:#999;font-size:15px}
+footer{background:#CC0000;color:#fff;text-align:center;padding:20px;font-size:13px;margin-top:40px}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">&#129656; BloodBank Goa</a>
+  <div class="nav-links">
+    <a href="/donor">Donor Portal</a>
+    <a href="/hospital">Hospital Portal</a>
+    {% if user_pic %}
+    <img src="{{ user_pic }}" class="user-pic">
+    {% endif %}
+    <span style="color:#fff;font-size:14px;font-weight:bold">{{ user }}</span>
+    <a href="/logout" class="logout">Logout</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div>
+    <h1>&#9881; Admin Dashboard
+      <span class="admin-badge">ADMIN</span>
+    </h1>
+    <p>Manage all donors, hospitals, blood inventory and requests</p>
+  </div>
+  <div style="color:#fff;font-size:14px;opacity:0.7">
+    BloodBank Goa — GCP System
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <h2>{{ donor_count }}</h2>
+      <p>Total Donors</p>
+    </div>
+    <div class="stat-card green">
+      <h2>{{ available_count }}</h2>
+      <p>Available Donors</p>
+    </div>
+    <div class="stat-card blue">
+      <h2>{{ hospital_count }}</h2>
+      <p>Hospitals</p>
+    </div>
+    <div class="stat-card">
+      <h2>{{ inventory_count }}</h2>
+      <p>Blood Units</p>
+    </div>
+    <div class="stat-card orange">
+      <h2>{{ pending_count }}</h2>
+      <p>Pending Requests</p>
+    </div>
+    <div class="stat-card green">
+      <h2>{{ request_count }}</h2>
+      <p>Total Requests</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('donors',this)">&#128100; Donors ({{ donor_count }})</button>
+    <button class="tab" onclick="showTab('hospitals',this)">&#127973; Hospitals ({{ hospital_count }})</button>
+    <button class="tab" onclick="showTab('requests',this)">&#129656; Requests ({{ request_count }})</button>
+    <button class="tab" onclick="showTab('inventory',this)">&#127798; Inventory ({{ inventory_count }})</button>
+  </div>
+
+  <div id="donors" class="tab-content active">
+    <div class="search-bar">
+      <input type="text" id="donorSearch"
+        placeholder="Search donors..."
+        onkeyup="searchTable('donorTable','donorSearch')">
+      <select onchange="filterTable('donorTable',2,this.value)">
+        <option value="">All Blood Types</option>
+        <option>A+</option><option>A-</option>
+        <option>B+</option><option>B-</option>
+        <option>AB+</option><option>AB-</option>
+        <option>O+</option><option>O-</option>
+      </select>
+    </div>
+    <table id="donorTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Blood Type</th>
+          <th>City</th>
+          <th>Phone</th>
+          <th>Donations</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in donors %}
+        <tr>
+          <td>{{ d.donor_id }}</td>
+          <td>{{ d.full_name }}</td>
+          <td><span class="badge badge-red">{{ d.blood_type }}</span></td>
+          <td>{{ d.city }}</td>
+          <td>{{ d.phone }}</td>
+          <td>{{ d.total_donations }}</td>
+          <td>
+            {% if d.is_available %}
+            <span class="badge badge-green">Available</span>
+            {% else %}
+            <span class="badge badge-orange">Unavailable</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div id="hospitals" class="tab-content">
+    <table id="hospitalTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Hospital Name</th>
+          <th>City</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in hospitals %}
+        <tr>
+          <td>{{ h.hospital_id }}</td>
+          <td>{{ h.hospital_name }}</td>
+          <td>{{ h.city }}</td>
+          <td>{{ h.phone }}</td>
+          <td>{{ h.email }}</td>
+          <td>
+            {% if 'goa.gov' in h.email %}
+            <span class="badge badge-govt">Government</span>
+            {% else %}
+            <span class="badge badge-pvt">Private</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div id="requests" class="tab-content">
+    <div class="search-bar">
+      <input type="text" id="reqSearch"
+        placeholder="Search requests..."
+        onkeyup="searchTable('reqTable','reqSearch')">
+      <select onchange="filterTable('reqTable',4,this.value)">
+        <option value="">All Status</option>
+        <option>PENDING</option>
+        <option>FULFILLED</option>
+        <option>CANCELLED</option>
+      </select>
+    </div>
+    <table id="reqTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Hospital</th>
+          <th>Blood Type</th>
+          <th>Units</th>
+          <th>Status</th>
+          <th>Urgency</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in requests %}
+        <tr>
+          <td>{{ r.request_id }}</td>
+          <td>{{ r.hospital_name }}</td>
+          <td><span class="badge badge-red">{{ r.blood_type }}</span></td>
+          <td>{{ r.units_needed }}</td>
+          <td>
+            {% if r.status == 'PENDING' %}
+            <span class="badge badge-orange">PENDING</span>
+            {% elif r.status == 'FULFILLED' %}
+            <span class="badge badge-green">FULFILLED</span>
+            {% else %}
+            <span class="badge badge-blue">{{ r.status }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if r.urgency == 'CRITICAL' %}
+            <span class="badge badge-red">CRITICAL</span>
+            {% elif r.urgency == 'URGENT' %}
+            <span class="badge badge-orange">URGENT</span>
+            {% else %}
+            <span class="badge badge-green">NORMAL</span>
+            {% endif %}
+          </td>
+          <td>{{ r.requested_at.strftime('%d %b %Y') }}</td>
+          <td>
+            {% if r.status == 'PENDING' %}
+            <form method="POST" action="/admin/fulfill/{{ r.request_id }}" style="display:inline">
+              <button type="submit" class="action-btn btn-fulfill">Fulfill</button>
+            </form>
+            <form method="POST" action="/admin/cancel/{{ r.request_id }}" style="display:inline">
+              <button type="submit" class="action-btn btn-cancel">Cancel</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        {% if not requests %}
+        <tr><td colspan="8" class="empty">No requests yet</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div id="inventory" class="tab-content">
+    <table>
+      <thead>
+        <tr>
+          <th>Unit ID</th>
+          <th>Blood Type</th>
+          <th>Donor ID</th>
+          <th>Collected Date</th>
+          <th>Expiry Date</th>
+          <th>Status</th>
+          <th>Storage</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in inventory %}
+        <tr>
+          <td>{{ i.unit_id }}</td>
+          <td><span class="badge badge-red">{{ i.blood_type }}</span></td>
+          <td>{{ i.donor_id }}</td>
+          <td>{{ i.collected_date }}</td>
+          <td>{{ i.expiry_date }}</td>
+          <td>
+            {% if i.status == 'AVAILABLE' %}
+            <span class="badge badge-green">AVAILABLE</span>
+            {% else %}
+            <span class="badge badge-orange">{{ i.status }}</span>
+            {% endif %}
+          </td>
+          <td>{{ i.storage_location }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  <p>&#129656; BloodBank Goa Admin Panel — Powered by Google Cloud Platform</p>
+</footer>
+
+<script>
+function showTab(name, el) {
+  document.querySelectorAll('.tab-content')
+    .forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab')
+    .forEach(t => t.classList.remove('active'));
+  document.getElementById(name)
+    .classList.add('active');
+  el.classList.add('active');
+}
+function searchTable(tableId, inputId) {
+  var input = document.getElementById(inputId).value.toLowerCase();
+  var rows = document.getElementById(tableId).getElementsByTagName('tr');
+  for (var i = 1; i < rows.length; i++) {
+    var text = rows[i].textContent.toLowerCase();
+    rows[i].style.display = text.includes(input) ? '' : 'none';
+  }
+}
+function filterTable(tableId, colIndex, value) {
+  var rows = document.getElementById(tableId).getElementsByTagName('tr');
+  for (var i = 1; i < rows.length; i++) {
+    var cell = rows[i].getElementsByTagName('td')[colIndex];
+    if (!value || cell.textContent.includes(value)) {
+      rows[i].style.display = '';
+    } else {
+      rows[i].style.display = 'none';
+    }
+  }
+}
+</script>
+</body>
+</html>

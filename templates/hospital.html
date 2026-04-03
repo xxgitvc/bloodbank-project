@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hospital Portal - BloodBank Goa</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+nav{background:#CC0000;padding:14px 32px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,0.2)}
+.logo{color:#fff;font-size:22px;font-weight:bold;text-decoration:none}
+.nav-links a{color:#fff;text-decoration:none;font-size:14px;padding:7px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.4);margin-left:8px}
+.nav-links a:hover{background:rgba(255,255,255,0.15)}
+.signin{background:#fff !important;color:#CC0000 !important;font-weight:bold;border:none !important}
+.page-header{background:#CC0000;color:#fff;text-align:center;padding:50px 32px 40px}
+.page-header h1{font-size:36px;font-weight:bold;margin-bottom:10px}
+.page-header p{font-size:16px;opacity:0.9}
+.container{max-width:1100px;margin:0 auto;padding:40px 32px}
+.tabs{display:flex;gap:0;margin-bottom:32px;border-radius:12px;overflow:hidden;border:1px solid #eee;width:fit-content}
+.tab{padding:12px 24px;background:#f5f5f5;color:#666;font-size:14px;font-weight:bold;cursor:pointer;border:none;transition:all 0.2s}
+.tab.active{background:#CC0000;color:#fff}
+.tab:hover:not(.active){background:#ffe0e0;color:#CC0000}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.form-card{background:#fff;border:1px solid #eee;border-radius:16px;padding:36px;max-width:620px;box-shadow:0 4px 16px rgba(0,0,0,0.06)}
+.form-card h2{color:#CC0000;font-size:22px;margin-bottom:8px}
+.form-card p{color:#666;font-size:14px;margin-bottom:28px}
+.form-group{margin-bottom:20px}
+.form-group label{display:block;font-size:14px;font-weight:bold;color:#333;margin-bottom:6px}
+.form-group input,.form-group select{width:100%;padding:11px 14px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none;transition:border 0.2s}
+.form-group input:focus,.form-group select:focus{border-color:#CC0000;box-shadow:0 0 0 3px rgba(204,0,0,0.08)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.btn-submit{background:#CC0000;color:#fff;padding:13px 32px;border:none;border-radius:30px;font-size:15px;font-weight:bold;cursor:pointer;width:100%;margin-top:8px;transition:background 0.2s}
+.btn-submit:hover{background:#aa0000}
+.urgency-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.urgency-btn{padding:12px;border:2px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;text-align:center;font-size:13px;font-weight:bold;color:#666;transition:all 0.2s}
+.urgency-btn.selected{border-color:#CC0000;background:#fff0f0;color:#CC0000}
+.urgency-btn.critical.selected{border-color:#CC0000;background:#CC0000;color:#fff}
+.hospitals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.hosp-card{background:#fff;border:1px solid #eee;border-radius:14px;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,0.05);transition:transform 0.2s}
+.hosp-card:hover{transform:translateY(-4px)}
+.hosp-icon{width:48px;height:48px;border-radius:12px;background:#fff0f0;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px}
+.hosp-card h3{font-size:15px;font-weight:bold;color:#333;margin-bottom:6px}
+.hosp-card p{font-size:13px;color:#666;margin:4px 0}
+.hosp-badge{display:inline-block;font-size:11px;font-weight:bold;padding:3px 10px;border-radius:20px;margin-top:8px}
+.govt{background:#f0fff0;color:#006600}
+.pvt{background:#fff0f0;color:#CC0000}
+.requests-list{display:flex;flex-direction:column;gap:16px}
+.req-card{background:#fff;border:1px solid #eee;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.req-left{display:flex;align-items:center;gap:16px}
+.blood-circle{width:56px;height:56px;border-radius:50%;background:#CC0000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;flex-shrink:0}
+.req-info h3{font-size:15px;font-weight:bold;color:#333;margin-bottom:4px}
+.req-info p{font-size:13px;color:#666;margin:2px 0}
+.status-badge{font-size:12px;font-weight:bold;padding:5px 14px;border-radius:20px}
+.pending{background:#fff3e0;color:#e65100}
+.fulfilled{background:#e8f5e9;color:#2e7d32}
+.critical-badge{background:#CC0000;color:#fff;font-size:11px;font-weight:bold;padding:3px 10px;border-radius:20px;margin-left:8px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:36px}
+.stat-card{background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.stat-card h2{font-size:32px;font-weight:bold;color:#CC0000}
+.stat-card p{font-size:13px;color:#666;margin-top:4px}
+.inventory-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}
+.inv-card{background:#fff;border:1px solid #eee;border-radius:12px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.inv-circle{width:64px;height:64px;border-radius:50%;background:#CC0000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;margin:0 auto 12px}
+.inv-card h3{font-size:14px;font-weight:bold;color:#333}
+.inv-card p{font-size:13px;color:#666;margin-top:4px}
+footer{background:#CC0000;color:#fff;text-align:center;padding:24px;font-size:13px;margin-top:60px}
+footer p{margin:5px 0}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">&#129656; BloodBank Goa</a>
+  <div class="nav-links">
+    <a href="/donor">Donor Portal</a>
+    <a href="/hospital" style="background:rgba(255,255,255,0.2)">Hospital Portal</a>
+    <a href="/login" class="signin">Sign in with Google</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <h1>&#127973; Hospital Portal</h1>
+  <p>Request blood, view inventory and manage all hospitals across Goa</p>
+</div>
+
+<div class="container">
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <h2>{{ hospital_count }}</h2>
+      <p>Hospitals in Goa</p>
+    </div>
+    <div class="stat-card">
+      <h2>{{ inventory_count }}</h2>
+      <p>Units Available</p>
+    </div>
+    <div class="stat-card">
+      <h2>{{ request_count }}</h2>
+      <p>Total Requests</p>
+    </div>
+    <div class="stat-card">
+      <h2>{{ pending_count }}</h2>
+      <p>Pending Requests</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('request')">Request Blood</button>
+    <button class="tab" onclick="showTab('hospitals')">All Hospitals</button>
+    <button class="tab" onclick="showTab('inventory')">Blood Inventory</button>
+    <button class="tab" onclick="showTab('requests')">View Requests</button>
+  </div>
+
+  <div id="request" class="tab-content active">
+    <div class="form-card">
+      <h2>&#128680; Request Blood</h2>
+      <p>Submit an emergency blood request for your hospital</p>
+      <form method="POST" action="/hospital/request">
+        <div class="form-group">
+          <label>Select Hospital</label>
+          <select name="hospital_id" required>
+            <option value="">Choose Hospital</option>
+            {% for h in hospitals %}
+            <option value="{{ h.hospital_id }}">
+              {{ h.hospital_name }} — {{ h.city }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Blood Type Needed</label>
+            <select name="blood_type" required>
+              <option value="">Select Blood Type</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Units Needed</label>
+            <input type="number" name="units_needed"
+              min="1" max="20" value="1" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Urgency Level</label>
+          <div class="urgency-row">
+            <div class="urgency-btn" onclick="setUrgency('NORMAL',this)">
+              &#128994; Normal
+            </div>
+            <div class="urgency-btn" onclick="setUrgency('URGENT',this)">
+              &#128993; Urgent
+            </div>
+            <div class="urgency-btn critical" onclick="setUrgency('CRITICAL',this)">
+              &#128308; Critical
+            </div>
+          </div>
+          <input type="hidden" name="urgency" id="urgency" value="NORMAL">
+        </div>
+        <button type="submit" class="btn-submit">
+          &#128680; Submit Blood Request
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div id="hospitals" class="tab-content">
+    <div class="hospitals-grid">
+      {% for h in hospitals %}
+      <div class="hosp-card">
+        <div class="hosp-icon">&#127973;</div>
+        <h3>{{ h.hospital_name }}</h3>
+        <p>&#128205; {{ h.city }}, Goa</p>
+        <p>&#128222; {{ h.phone }}</p>
+        <p>&#128231; {{ h.email }}</p>
+        {% if 'goa.gov' in h.email %}
+        <span class="hosp-badge govt">Government</span>
+        {% else %}
+        <span class="hosp-badge pvt">Private</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div id="inventory" class="tab-content">
+    <div class="inventory-grid">
+      {% for item in inventory %}
+      <div class="inv-card">
+        <div class="inv-circle">{{ item.blood_type }}</div>
+        <h3>{{ item.blood_type }}</h3>
+        <p>{{ item.status }}</p>
+        <p style="font-size:11px;color:#999;margin-top:6px">
+          Expires {{ item.expiry_date }}
+        </p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div id="requests" class="tab-content">
+    <div class="requests-list">
+      {% for r in requests %}
+      <div class="req-card">
+        <div class="req-left">
+          <div class="blood-circle">{{ r.blood_type }}</div>
+          <div class="req-info">
+            <h3>{{ r.blood_type }} Blood Needed
+              {% if r.urgency == 'CRITICAL' %}
+              <span class="critical-badge">CRITICAL</span>
+              {% endif %}
+            </h3>
+            <p>&#127973; {{ r.hospital_name }}</p>
+            <p>&#128197; {{ r.requested_at }}</p>
+            <p>Units: {{ r.units_needed }}</p>
+          </div>
+        </div>
+        <span class="status-badge
+          {% if r.status == 'PENDING' %}pending
+          {% else %}fulfilled{% endif %}">
+          {{ r.status }}
+        </span>
+      </div>
+      {% endfor %}
+      {% if not requests %}
+      <p style="color:#666;text-align:center;padding:40px">
+        No requests yet. Submit your first request!
+      </p>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>&#129656; BloodBank Goa — Powered by Google Cloud Platform</p>
+  <p>Serving all hospitals across Goa &#10084;</p>
+</footer>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.tab-content')
+    .forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab')
+    .forEach(t => t.classList.remove('active'));
+  document.getElementById(name)
+    .classList.add('active');
+  event.target.classList.add('active');
+}
+function setUrgency(val, el) {
+  document.querySelectorAll('.urgency-btn')
+    .forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('urgency').value = val;
+}
+</script>
+</body>
+</html>
