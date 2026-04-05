@@ -5,26 +5,25 @@ import os
 import requests as http_requests
 from config import *
 
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-NGROK = "https://unblamable-untempting-daniele.ngrok-free.dev"
+REDIRECT_URI = "https://bloodbank-project-b3zs.onrender.com/login/callback"
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USER_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
-REDIRECT_URI = "https://bloodbank-project-b3zs.onrender.com/login/callback"
 
 def get_db():
     return mysql.connector.connect(
         host=MYSQL_HOST, user=MYSQL_USER,
-        password=MYSQL_PASSWORD, database=MYSQL_DATABASE)
+        password=MYSQL_PASSWORD,
+        database=MYSQL_DATABASE)
 
 @app.route('/')
 def home():
     return render_template('index.html',
-        user=session.get('user_name'))
+        user=session.get('user_name'),
+        user_pic=session.get('user_pic'))
 
 @app.route('/login')
 def login():
@@ -36,8 +35,7 @@ def login():
         "&redirect_uri=" + REDIRECT_URI +
         "&response_type=code" +
         "&scope=openid email profile" +
-        "&access_type=offline"
-    )
+        "&access_type=offline")
     return render_template('login.html',
         google_login_url=google_login_url,
         error=None)
@@ -53,8 +51,7 @@ def login_callback():
         'client_id': GOOGLE_CLIENT_ID,
         'client_secret': GOOGLE_CLIENT_SECRET,
         'redirect_uri': REDIRECT_URI,
-        'grant_type': 'authorization_code'
-    })
+        'grant_type': 'authorization_code'})
     token_data = token_resp.json()
     access_token = token_data.get('access_token')
     if not access_token:
@@ -78,14 +75,17 @@ def logout():
 def donor():
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM donors ORDER BY created_at DESC")
+    cursor.execute(
+        "SELECT * FROM donors ORDER BY created_at DESC")
     donors = cursor.fetchall()
     donor_count = len(donors)
-    available_count = sum(1 for d in donors if d['is_available'])
+    available_count = sum(
+        1 for d in donors if d['is_available'])
     cursor.close()
     db.close()
     return render_template('donor.html',
-        donors=donors, donor_count=donor_count,
+        donors=donors,
+        donor_count=donor_count,
         available_count=available_count,
         user=session.get('user_name'),
         user_pic=session.get('user_pic'))
@@ -107,14 +107,21 @@ def donor_register():
         'Canacona': (15.0142, 74.0308),
         'Bicholim': (15.5957, 73.9503),
         'Quepem': (15.2122, 74.0772)}
-    lat, lng = city_coords.get(city, (15.2993, 74.1240))
+    lat, lng = city_coords.get(
+        city, (15.2993, 74.1240))
     cursor.execute("""
         INSERT INTO donors
-        (donor_id, full_name, email, blood_type, phone, city,
-        latitude, longitude, is_available, total_donations)
+        (donor_id, full_name, email,
+        blood_type, phone, city,
+        latitude, longitude,
+        is_available, total_donations)
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,1,0)""",
-        (donor_id, request.form['full_name'], request.form['email'],
-        request.form['blood_type'], request.form['phone'], city, lat, lng))
+        (donor_id,
+        request.form['full_name'],
+        request.form['email'],
+        request.form['blood_type'],
+        request.form['phone'],
+        city, lat, lng))
     db.commit()
     cursor.close()
     db.close()
@@ -124,24 +131,31 @@ def donor_register():
 def hospital():
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM hospitals ORDER BY city")
+    cursor.execute(
+        "SELECT * FROM hospitals ORDER BY city")
     hospitals = cursor.fetchall()
-    cursor.execute("SELECT * FROM blood_inventory WHERE status='AVAILABLE'")
+    cursor.execute(
+        "SELECT * FROM blood_inventory WHERE status='AVAILABLE'")
     inventory = cursor.fetchall()
     cursor.execute("""
-        SELECT r.*, h.hospital_name FROM blood_requests r
-        JOIN hospitals h ON r.hospital_id = h.hospital_id
+        SELECT r.*, h.hospital_name
+        FROM blood_requests r
+        JOIN hospitals h
+        ON r.hospital_id = h.hospital_id
         ORDER BY r.requested_at DESC""")
     requests_list = cursor.fetchall()
     cursor.close()
     db.close()
     return render_template('hospital.html',
-        hospitals=hospitals, inventory=inventory,
+        hospitals=hospitals,
+        inventory=inventory,
         requests=requests_list,
         hospital_count=len(hospitals),
         inventory_count=len(inventory),
         request_count=len(requests_list),
-        pending_count=sum(1 for r in requests_list if r['status']=='PENDING'),
+        pending_count=sum(
+            1 for r in requests_list
+            if r['status']=='PENDING'),
         user=session.get('user_name'),
         user_pic=session.get('user_pic'))
 
@@ -152,18 +166,19 @@ def hospital_request():
     request_id = 'R' + str(uuid.uuid4())[:6].upper()
     cursor.execute("""
         INSERT INTO blood_requests
-        (request_id, hospital_id, blood_type, units_needed, urgency, status)
+        (request_id, hospital_id,
+        blood_type, units_needed,
+        urgency, status)
         VALUES (%s,%s,%s,%s,%s,'PENDING')""",
-        (request_id, request.form['hospital_id'],
-        request.form['blood_type'], request.form['units_needed'],
+        (request_id,
+        request.form['hospital_id'],
+        request.form['blood_type'],
+        request.form['units_needed'],
         request.form['urgency']))
     db.commit()
     cursor.close()
     db.close()
     return redirect(url_for('hospital'))
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
 
 @app.route('/admin')
 def admin():
@@ -171,9 +186,11 @@ def admin():
         return redirect(url_for('login'))
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM donors ORDER BY created_at DESC")
+    cursor.execute(
+        "SELECT * FROM donors ORDER BY created_at DESC")
     donors = cursor.fetchall()
-    cursor.execute("SELECT * FROM hospitals ORDER BY city")
+    cursor.execute(
+        "SELECT * FROM hospitals ORDER BY city")
     hospitals = cursor.fetchall()
     cursor.execute("""
         SELECT r.*, h.hospital_name
@@ -182,7 +199,8 @@ def admin():
         ON r.hospital_id = h.hospital_id
         ORDER BY r.requested_at DESC""")
     requests_list = cursor.fetchall()
-    cursor.execute("SELECT * FROM blood_inventory")
+    cursor.execute(
+        "SELECT * FROM blood_inventory")
     inventory = cursor.fetchall()
     cursor.close()
     db.close()
@@ -192,15 +210,20 @@ def admin():
         requests=requests_list,
         inventory=inventory,
         donor_count=len(donors),
-        available_count=sum(1 for d in donors if d['is_available']),
+        available_count=sum(
+            1 for d in donors
+            if d['is_available']),
         hospital_count=len(hospitals),
         inventory_count=len(inventory),
         request_count=len(requests_list),
-        pending_count=sum(1 for r in requests_list if r['status']=='PENDING'),
+        pending_count=sum(
+            1 for r in requests_list
+            if r['status']=='PENDING'),
         user=session.get('user_name'),
         user_pic=session.get('user_pic'))
 
-@app.route('/admin/fulfill/<request_id>', methods=['POST'])
+@app.route('/admin/fulfill/<request_id>',
+    methods=['POST'])
 def fulfill_request(request_id):
     if not session.get('logged_in'):
         return redirect(url_for('login'))
@@ -216,7 +239,8 @@ def fulfill_request(request_id):
     db.close()
     return redirect(url_for('admin'))
 
-@app.route('/admin/cancel/<request_id>', methods=['POST'])
+@app.route('/admin/cancel/<request_id>',
+    methods=['POST'])
 def cancel_request(request_id):
     if not session.get('logged_in'):
         return redirect(url_for('login'))
@@ -231,3 +255,7 @@ def cancel_request(request_id):
     cursor.close()
     db.close()
     return redirect(url_for('admin'))
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0',
+        port=5000, debug=True)
