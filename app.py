@@ -22,15 +22,14 @@ def get_db():
         database=MYSQL_DATABASE
     )
 
-# ================= HOME (DYNAMIC MAP DATA) =================
+# ================= HOME =================
 @app.route('/')
 def home():
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
     cursor.execute("""
-        SELECT full_name, city, blood_type,
-               latitude, longitude
+        SELECT full_name, city, blood_type, latitude, longitude
         FROM donors
         WHERE is_available = 1
     """)
@@ -63,10 +62,13 @@ def login():
 
     return render_template("login.html", google_login_url=google_login_url)
 
-# ================= CALLBACK =================
+# ================= CALLBACK (FIXED) =================
 @app.route('/login/callback')
 def login_callback():
     code = request.args.get('code')
+
+    if not code:
+        return "No code received from Google"
 
     try:
         token_resp = http_requests.post(
@@ -81,7 +83,11 @@ def login_callback():
         )
 
         token_data = token_resp.json()
-        access_token = token_data.get('access_token')
+
+        if 'access_token' not in token_data:
+            return f"Token Error: {token_data}"
+
+        access_token = token_data['access_token']
 
         user_resp = http_requests.get(
             GOOGLE_USER_URL,
@@ -89,6 +95,9 @@ def login_callback():
         )
 
         user_info = user_resp.json()
+
+        # 🔥 IMPORTANT FIX (SESSION RESET)
+        session.clear()
 
         session['user_name'] = user_info.get('name')
         session['user_email'] = user_info.get('email')
@@ -101,16 +110,16 @@ def login_callback():
             email and email.strip().lower() == "msci.2323@unigoa.ac.in"
         )
 
-        return redirect(url_for('home'))
+        return redirect('/')
 
     except Exception as e:
-        return str(e)
+        return f"Error: {str(e)}"
 
 # ================= LOGOUT =================
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('home'))
+    return redirect('/')
 
 # ================= DONOR =================
 @app.route('/donor')
@@ -118,7 +127,7 @@ def donor():
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM donors")
+    cursor.execute("SELECT * FROM donors ORDER BY created_at DESC")
     donors = cursor.fetchall()
 
     cursor.close()
@@ -170,7 +179,7 @@ def donor_register():
 @app.route('/admin')
 def admin():
     if not session.get('logged_in'):
-        return redirect(url_for('login'))
+        return redirect('/login')
 
     if not session.get('is_admin'):
         return "Access Denied"
@@ -179,4 +188,4 @@ def admin():
 
 # ================= RUN =================
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=5000)
