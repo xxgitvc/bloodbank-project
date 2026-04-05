@@ -210,81 +210,44 @@ def hospital_request():
     return redirect(url_for('hospital'))
 
 # ================= ADMIN =================
-
 @app.route('/admin')
 def admin():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
+
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute(
-        "SELECT * FROM donors ORDER BY created_at DESC")
+
+    cursor.execute("SELECT * FROM donors ORDER BY created_at DESC")
     donors = cursor.fetchall()
-    cursor.execute(
-        "SELECT * FROM hospitals ORDER BY city")
+
+    cursor.execute("SELECT * FROM hospitals ORDER BY city")
     hospitals = cursor.fetchall()
+
     cursor.execute("""
         SELECT r.*, h.hospital_name
         FROM blood_requests r
         JOIN hospitals h
         ON r.hospital_id = h.hospital_id
-        ORDER BY r.requested_at DESC""")
+        ORDER BY r.requested_at DESC
+    """)
     requests_list = cursor.fetchall()
-    cursor.execute(
-        "SELECT * FROM blood_inventory")
+
+    cursor.execute("SELECT * FROM blood_inventory")
     inventory = cursor.fetchall()
+
     cursor.close()
     db.close()
-    return render_template('admin.html',
+
+    return render_template(
+        'admin.html',
         donors=donors,
         hospitals=hospitals,
         requests=requests_list,
         inventory=inventory,
-        donor_count=len(donors),
-        available_count=sum(
-            1 for d in donors
-            if d['is_available']),
-        hospital_count=len(hospitals),
-        inventory_count=len(inventory),
-        request_count=len(requests_list),
-        pending_count=sum(
-            1 for r in requests_list
-            if r['status']=='PENDING'),
         user=session.get('user_name'),
-        user_pic=session.get('user_pic'))
-
-@app.route('/admin/fulfill/<request_id>', methods=['POST'])
-def fulfill_request(request_id):
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("""
-        UPDATE blood_requests
-        SET status='FULFILLED'
-        WHERE request_id=%s""",
-        (request_id,))
-    db.commit()
-    cursor.close()
-    db.close()
-    return redirect(url_for('admin'))
-
-@app.route('/admin/cancel/<request_id>', methods=['POST'])
-def cancel_request(request_id):
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("""
-        UPDATE blood_requests
-        SET status='CANCELLED'
-        WHERE request_id=%s""",
-        (request_id,))
-    db.commit()
-    cursor.close()
-    db.close()
-    return redirect(url_for('admin'))
-
+        user_pic=session.get('user_pic')
+    )
 # ================= RUN =================
 
 if __name__ == '__main__':
