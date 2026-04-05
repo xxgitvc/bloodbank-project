@@ -14,7 +14,7 @@ NGROK = "https://unblamable-untempting-daniele.ngrok-free.dev"
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USER_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
-REDIRECT_URI = "https://consoles-ctrl-demo-monroe.trycloudflare.com/login/callback"
+REDIRECT_URI = "https://bloodbank-project-b3zs.onrender.com/login/callback"
 
 def get_db():
     return mysql.connector.connect(
