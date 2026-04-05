@@ -85,10 +85,11 @@ def login_callback():
         session['user_pic'] = user_info.get('picture')
         session['logged_in'] = True
 
-        return redirect(url_for('home'))
-
-    except Exception as e:
-        return f"Error: {str(e)}"
+        # ✅ ADMIN CHECK
+        if user_info.get('email') == "msci.2323@unigoa.ac.in":
+              session['is_admin'] = True
+        else:
+              session['is_admin'] = False
 # ================= LOGOUT =================
 
 @app.route('/logout')
@@ -215,6 +216,9 @@ def admin():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
+    if not session.get('is_admin'):
+        return "Access Denied"
+    
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
