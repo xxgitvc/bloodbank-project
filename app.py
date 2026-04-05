@@ -25,26 +25,34 @@ def home():
         user=session.get('user_name'),
         user_pic=session.get('user_pic'))
 
+# ================= LOGIN =================
+
 @app.route('/login')
 def login():
     if session.get('logged_in'):
         return redirect(url_for('home'))
+
     google_login_url = (
         GOOGLE_AUTH_URL +
         "?client_id=" + GOOGLE_CLIENT_ID +
         "&redirect_uri=" + REDIRECT_URI +
         "&response_type=code" +
-        "&scope=openid email profile" +
-        "&access_type=offline")
+        "&scope=openid%20email%20profile" +   # ✅ FIXED HERE
+        "&access_type=offline"
+    )
+
     return render_template('login.html',
         google_login_url=google_login_url,
         error=None)
+
+# ================= CALLBACK =================
 
 @app.route('/login/callback')
 def login_callback():
     code = request.args.get('code')
     if not code:
         return redirect(url_for('login'))
+
     token_resp = http_requests.post(
         GOOGLE_TOKEN_URL, data={
         'code': code,
@@ -52,24 +60,34 @@ def login_callback():
         'client_secret': GOOGLE_CLIENT_SECRET,
         'redirect_uri': REDIRECT_URI,
         'grant_type': 'authorization_code'})
+
     token_data = token_resp.json()
     access_token = token_data.get('access_token')
+
     if not access_token:
-        return redirect(url_for('login'))
+        return "Failed to get access token"
+
     user_resp = http_requests.get(
         GOOGLE_USER_URL,
         headers={'Authorization': 'Bearer ' + access_token})
+
     user_info = user_resp.json()
+
     session['user_name'] = user_info.get('name')
     session['user_email'] = user_info.get('email')
     session['user_pic'] = user_info.get('picture')
     session['logged_in'] = True
+
     return redirect(url_for('home'))
+
+# ================= LOGOUT =================
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('home'))
+
+# ================= DONOR =================
 
 @app.route('/donor')
 def donor():
@@ -127,6 +145,8 @@ def donor_register():
     db.close()
     return redirect(url_for('donor'))
 
+# ================= HOSPITAL =================
+
 @app.route('/hospital')
 def hospital():
     db = get_db()
@@ -180,6 +200,8 @@ def hospital_request():
     db.close()
     return redirect(url_for('hospital'))
 
+# ================= ADMIN =================
+
 @app.route('/admin')
 def admin():
     if not session.get('logged_in'):
@@ -222,8 +244,7 @@ def admin():
         user=session.get('user_name'),
         user_pic=session.get('user_pic'))
 
-@app.route('/admin/fulfill/<request_id>',
-    methods=['POST'])
+@app.route('/admin/fulfill/<request_id>', methods=['POST'])
 def fulfill_request(request_id):
     if not session.get('logged_in'):
         return redirect(url_for('login'))
@@ -239,8 +260,7 @@ def fulfill_request(request_id):
     db.close()
     return redirect(url_for('admin'))
 
-@app.route('/admin/cancel/<request_id>',
-    methods=['POST'])
+@app.route('/admin/cancel/<request_id>', methods=['POST'])
 def cancel_request(request_id):
     if not session.get('logged_in'):
         return redirect(url_for('login'))
@@ -256,6 +276,7 @@ def cancel_request(request_id):
     db.close()
     return redirect(url_for('admin'))
 
+# ================= RUN =================
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',
-        port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
