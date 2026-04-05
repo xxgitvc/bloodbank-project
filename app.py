@@ -52,7 +52,7 @@ def login_callback():
     code = request.args.get('code')
 
     if not code:
-        return "No code received from Google"
+        return "No code received"
 
     try:
         token_resp = http_requests.post(
@@ -85,11 +85,16 @@ def login_callback():
         session['user_pic'] = user_info.get('picture')
         session['logged_in'] = True
 
-        # ✅ ADMIN CHECK
+        # ✅ ADMIN EMAIL
         if user_info.get('email') == "msci.2323@unigoa.ac.in":
-              session['is_admin'] = True
+            session['is_admin'] = True
         else:
-              session['is_admin'] = False
+            session['is_admin'] = False
+
+        return redirect(url_for('home'))
+
+    except Exception as e:
+        return f"Error: {str(e)}"
 # ================= LOGOUT =================
 
 @app.route('/logout')
