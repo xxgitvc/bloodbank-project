@@ -86,10 +86,12 @@ def login_callback():
         session['logged_in'] = True
 
         # ✅ ADMIN EMAIL
-        if user_info.get('email') == "msci.2323@unigoa.ac.in":
-            session['is_admin'] = True
-        else:
-            session['is_admin'] = False
+        email = user_info.get('email')
+
+if email and email.strip().lower() == "msci.2323@unigoa.ac.in":
+    session['is_admin'] = True
+else:
+    session['is_admin'] = False
 
         return redirect(url_for('home'))
 
