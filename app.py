@@ -50,36 +50,45 @@ def login():
 @app.route('/login/callback')
 def login_callback():
     code = request.args.get('code')
+
     if not code:
-        return redirect(url_for('login'))
+        return "No code received from Google"
 
-    token_resp = http_requests.post(
-        GOOGLE_TOKEN_URL, data={
-        'code': code,
-        'client_id': GOOGLE_CLIENT_ID,
-        'client_secret': GOOGLE_CLIENT_SECRET,
-        'redirect_uri': REDIRECT_URI,
-        'grant_type': 'authorization_code'})
+    try:
+        token_resp = http_requests.post(
+            GOOGLE_TOKEN_URL,
+            data={
+                'code': code,
+                'client_id': GOOGLE_CLIENT_ID,
+                'client_secret': GOOGLE_CLIENT_SECRET,
+                'redirect_uri': REDIRECT_URI,
+                'grant_type': 'authorization_code'
+            }
+        )
 
-    token_data = token_resp.json()
-    access_token = token_data.get('access_token')
+        token_data = token_resp.json()
 
-    if not access_token:
-        return "Failed to get access token"
+        if 'access_token' not in token_data:
+            return f"Token Error: {token_data}"
 
-    user_resp = http_requests.get(
-        GOOGLE_USER_URL,
-        headers={'Authorization': 'Bearer ' + access_token})
+        access_token = token_data.get('access_token')
 
-    user_info = user_resp.json()
+        user_resp = http_requests.get(
+            GOOGLE_USER_URL,
+            headers={'Authorization': 'Bearer ' + access_token}
+        )
 
-    session['user_name'] = user_info.get('name')
-    session['user_email'] = user_info.get('email')
-    session['user_pic'] = user_info.get('picture')
-    session['logged_in'] = True
+        user_info = user_resp.json()
 
-    return redirect(url_for('home'))
+        session['user_name'] = user_info.get('name')
+        session['user_email'] = user_info.get('email')
+        session['user_pic'] = user_info.get('picture')
+        session['logged_in'] = True
 
+        return redirect(url_for('home'))
+
+    except Exception as e:
+        return f"Error: {str(e)}"
 # ================= LOGOUT =================
 
 @app.route('/logout')
