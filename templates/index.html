@@ -13,8 +13,6 @@ nav{background:#CC0000;padding:14px 32px;display:flex;justify-content:space-betw
 .nav-links a{color:#fff;text-decoration:none;font-size:14px;padding:7px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.4)}
 .nav-links a:hover{background:rgba(255,255,255,0.15)}
 .signin{background:#fff !important;color:#CC0000 !important;font-weight:bold;border:none !important}
-.user-pic{width:32px;height:32px;border-radius:50%}
-.user-name{color:#fff;font-size:14px;font-weight:bold}
 
 .hero{background:#CC0000;color:#fff;text-align:center;padding:70px 32px 50px}
 .hero h1{font-size:42px;margin-bottom:14px}
@@ -46,6 +44,7 @@ footer{background:#CC0000;color:#fff;text-align:center;padding:24px}
   <h1>Saving Lives Across <span>Goa</span></h1>
 </div>
 
+<!-- ================= HOSPITALS ================= -->
 <div class="section grey">
   <h2>Hospitals in Goa</h2>
 
@@ -56,9 +55,9 @@ footer{background:#CC0000;color:#fff;text-align:center;padding:24px}
   </div>
 </div>
 
-<!-- 🔥 MAP SECTION ADDED -->
+<!-- ================= MAP SECTION ================= -->
 <div class="section">
-  <h2>Donor Locations in Goa</h2>
+  <h2>Live Donor Locations (Cloud Synced)</h2>
 
   <div id="map" style="height:400px; width:100%; border-radius:12px;"></div>
 
@@ -71,19 +70,20 @@ footer{background:#CC0000;color:#fff;text-align:center;padding:24px}
           center: goa
       });
 
-      var locations = [
-          { lat: 15.4909, lng: 73.8278, name: "Panaji" },
-          { lat: 15.2832, lng: 73.9862, name: "Margao" },
-          { lat: 15.3982, lng: 73.8111, name: "Vasco" },
-          { lat: 15.5957, lng: 73.8145, name: "Mapusa" }
-      ];
+      // 🔥 GET DONORS FROM BACKEND (CLOUD)
+      var donors = {{ donors | tojson }};
 
-      locations.forEach(loc => {
-          new google.maps.Marker({
-              position: loc,
-              map: map,
-              title: loc.name
-          });
+      donors.forEach(d => {
+          if (d.latitude && d.longitude) {
+              new google.maps.Marker({
+                  position: {
+                      lat: parseFloat(d.latitude),
+                      lng: parseFloat(d.longitude)
+                  },
+                  map: map,
+                  title: d.full_name + " (" + d.blood_type + ")"
+              });
+          }
       });
   }
   </script>
@@ -94,8 +94,10 @@ footer{background:#CC0000;color:#fff;text-align:center;padding:24px}
 
 </div>
 
+<!-- ================= FOOTER ================= -->
 <footer>
-  <p>BloodBank Goa © 2026</p>
+  <p>🩸 BloodBank Goa — Cloud Powered System</p>
+  <p>Real-time donor tracking across Goa</p>
 </footer>
 
 </body>
