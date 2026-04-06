@@ -7,13 +7,13 @@ from config import *
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-# Google OAuth
+# ================= GOOGLE CONFIG =================
 REDIRECT_URI = "https://bloodbank-project-b3zs.onrender.com/login/callback"
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USER_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 
-# DB connection
+# ================= DB CONNECTION =================
 def get_db():
     return mysql.connector.connect(
         host=MYSQL_HOST,
@@ -55,20 +55,20 @@ def login():
         GOOGLE_AUTH_URL +
         "?client_id=" + GOOGLE_CLIENT_ID +
         "&redirect_uri=" + REDIRECT_URI +
-        "&response_type=code"
-        "&scope=openid%20email%20profile"
+        "&response_type=code" +
+        "&scope=openid%20email%20profile" +
         "&access_type=offline"
     )
 
     return render_template("login.html", google_login_url=google_login_url)
 
-# ================= CALLBACK (FIXED) =================
+# ================= CALLBACK =================
 @app.route('/login/callback')
 def login_callback():
     code = request.args.get('code')
 
     if not code:
-        return "No code received from Google"
+        return "No code received"
 
     try:
         token_resp = http_requests.post(
@@ -96,7 +96,7 @@ def login_callback():
 
         user_info = user_resp.json()
 
-        # 🔥 IMPORTANT FIX (SESSION RESET)
+        # 🔥 FIX: clear old session
         session.clear()
 
         session['user_name'] = user_info.get('name')
@@ -174,6 +174,20 @@ def donor_register():
     db.close()
 
     return redirect(url_for('donor'))
+
+# ================= HOSPITAL =================
+@app.route('/hospital')
+def hospital():
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM hospitals")
+    hospitals = cursor.fetchall()
+
+    cursor.close()
+    db.close()
+
+    return render_template("hospital.html", hospitals=hospitals)
 
 # ================= ADMIN =================
 @app.route('/admin')
