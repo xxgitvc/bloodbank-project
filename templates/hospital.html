@@ -1,7 +1,52 @@
 <!DOCTYPE html>
 <html>
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+<style>
+body{font-family:Poppins;background:#f4f6f9}
+
+/* CARD */
+.card{
+background:white;
+padding:30px;
+margin:40px auto;
+width:80%;
+border-radius:15px;
+box-shadow:0 10px 20px rgba(0,0,0,0.1)
+}
+
+/* BUTTON */
+button{
+background:#cc0000;
+color:white;
+padding:10px 20px;
+border:none;
+border-radius:20px;
+cursor:pointer
+}
+
+button:hover{background:#ff3333}
+
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:15px;
+margin-top:20px
+}
+
+.donor{
+background:white;
+padding:15px;
+border-radius:10px;
+box-shadow:0 5px 15px rgba(0,0,0,0.1)
+}
+</style>
+</head>
+
 <body>
 
+<div class="card">
 <h2>Request Blood</h2>
 
 <form method="POST">
@@ -14,13 +59,24 @@
 
 <button>Find Donors</button>
 </form>
+</div>
 
 {% if matched_donors %}
-<h3>Matching Donors</h3>
+<div class="card">
+<h2>🧬 Matching Donors</h2>
 
+<div class="grid">
 {% for d in matched_donors %}
-<p>{{ d.full_name }} - {{ d.blood_type }} - {{ d.phone }}</p>
+<div class="donor">
+<h3>{{ d.full_name }}</h3>
+<p>🩸 {{ d.blood_type }}</p>
+<p>📍 {{ d.city }}</p>
+<p>📞 {{ d.phone }}</p>
+</div>
 {% endfor %}
+</div>
+
+</div>
 {% endif %}
 
 </body>
