@@ -7,39 +7,140 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
-nav{background:#CC0000;padding:14px 32px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,0.2)}
+
+nav{
+  background:#CC0000;
+  padding:14px 32px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  position:sticky;
+  top:0;
+  z-index:100;
+  box-shadow:0 2px 10px rgba(0,0,0,0.2)
+}
+
 .logo{color:#fff;font-size:22px;font-weight:bold}
-.nav-links{display:flex;align-items:center;gap:8px}
-.nav-links a{color:#fff;text-decoration:none;font-size:14px;padding:7px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.4)}
-.nav-links a:hover{background:rgba(255,255,255,0.15)}
-.signin{background:#fff !important;color:#CC0000 !important;font-weight:bold;border:none !important}
 
-.hero{background:#CC0000;color:#fff;text-align:center;padding:70px 32px 50px}
-.hero h1{font-size:42px;margin-bottom:14px}
-.hero h1 span{color:#FFD700}
+.nav-links{
+  display:flex;
+  align-items:center;
+  gap:10px
+}
 
-.section{padding:60px 32px;text-align:center}
-.section.grey{background:#f5f5f5}
-.section h2{font-size:28px;color:#CC0000;margin-bottom:40px}
+.nav-links a{
+  color:#fff;
+  text-decoration:none;
+  font-size:14px;
+  padding:7px 16px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,0.4)
+}
 
-.hospitals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;max-width:1000px;margin:0 auto}
-.hosp-card{background:#fff;border:1px solid #eee;border-radius:12px;padding:20px}
+.nav-links a:hover{
+  background:rgba(255,255,255,0.15)
+}
 
-footer{background:#CC0000;color:#fff;text-align:center;padding:24px}
+.signin{
+  background:#fff !important;
+  color:#CC0000 !important;
+  font-weight:bold;
+  border:none !important
+}
+
+.user-pic{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+}
+
+.user-name{
+  color:white;
+  font-weight:bold;
+  margin:0 5px;
+}
+
+.hero{
+  background:#CC0000;
+  color:#fff;
+  text-align:center;
+  padding:70px 32px 50px
+}
+
+.hero h1{
+  font-size:42px;
+  margin-bottom:14px
+}
+
+.hero h1 span{
+  color:#FFD700
+}
+
+.section{
+  padding:60px 32px;
+  text-align:center
+}
+
+.section.grey{
+  background:#f5f5f5
+}
+
+.section h2{
+  font-size:28px;
+  color:#CC0000;
+  margin-bottom:40px
+}
+
+.hospitals{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:16px;
+  max-width:1000px;
+  margin:0 auto
+}
+
+.hosp-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:12px;
+  padding:20px
+}
+
+footer{
+  background:#CC0000;
+  color:#fff;
+  text-align:center;
+  padding:24px
+}
 </style>
 </head>
 
 <body>
 
+<!-- ================= NAVBAR ================= -->
 <nav>
   <div class="logo">🩸 BloodBank Goa</div>
+
   <div class="nav-links">
     <a href="/donor">Donor</a>
     <a href="/hospital">Hospital</a>
-    <a href="/login" class="signin">Login</a>
+
+    {% if user %}
+        <img src="{{ user_pic }}" class="user-pic">
+        <span class="user-name">{{ user }}</span>
+
+        {% if session.get('is_admin') %}
+            <a href="/admin">Admin</a>
+        {% endif %}
+
+        <a href="/logout">Logout</a>
+    {% else %}
+        <a href="/login" class="signin">Login</a>
+    {% endif %}
   </div>
 </nav>
 
+<!-- ================= HERO ================= -->
 <div class="hero">
   <h1>Saving Lives Across <span>Goa</span></h1>
 </div>
@@ -55,7 +156,7 @@ footer{background:#CC0000;color:#fff;text-align:center;padding:24px}
   </div>
 </div>
 
-<!-- ================= MAP SECTION ================= -->
+<!-- ================= MAP ================= -->
 <div class="section">
   <h2>Live Donor Locations (Cloud Synced)</h2>
 
@@ -70,7 +171,6 @@ footer{background:#CC0000;color:#fff;text-align:center;padding:24px}
           center: goa
       });
 
-      // 🔥 GET DONORS FROM BACKEND (CLOUD)
       var donors = {{ donors | tojson }};
 
       donors.forEach(d => {
