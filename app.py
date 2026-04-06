@@ -19,14 +19,22 @@ TOPIC_ID = "blood-alerts"
 
 def send_alert(message):
     try:
+        from google.cloud import pubsub_v1
+        import os
+
+        project_id = os.environ.get("GCP_PROJECT_ID")
+        if not project_id:
+            print("No project id")
+            return
+
         publisher = pubsub_v1.PublisherClient()
-        topic_path = publisher.topic_path(PROJECT_ID, TOPIC_ID)
+        topic_path = publisher.topic_path(project_id, "blood-alerts")
 
         publisher.publish(topic_path, message.encode("utf-8"))
         print("Alert sent:", message)
 
     except Exception as e:
-        print("PubSub disabled:", e)
+        print("PubSub error:", e)
 
 # ================= BLOOD MATCHING =================
 def is_compatible(donor, recipient):
@@ -206,7 +214,10 @@ def donor_register():
 def hospital():
     db = get_db()
     cursor = db.cursor(dictionary=True)
+    try:
     send_alert(f"Blood request: {requested_blood}")
+except:
+    pass
 
     matched_donors = []
 
