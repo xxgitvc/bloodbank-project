@@ -9,29 +9,18 @@ import os
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-# ================= GOOGLE CONFIG =================
 REDIRECT_URI = "https://bloodbank-project-b3zs.onrender.com/login/callback"
 
-# ================= PUBSUB (SAFE) =================
-def send_alert(message):
-    try:
-        from google.cloud import pubsub_v1
+# ================= DB =================
+def get_db():
+    return mysql.connector.connect(
+        host=MYSQL_HOST,
+        user=MYSQL_USER,
+        password=MYSQL_PASSWORD,
+        database=MYSQL_DATABASE
+    )
 
-        project_id = os.environ.get("GCP_PROJECT_ID")
-        if not project_id:
-            print("No project id")
-            return
-
-        publisher = pubsub_v1.PublisherClient()
-        topic_path = publisher.topic_path(project_id, "blood-alerts")
-
-        publisher.publish(topic_path, message.encode("utf-8"))
-        print("Alert sent:", message)
-
-    except Exception as e:
-        print("PubSub error:", e)
-
-# ================= BLOOD MATCHING =================
+# ================= BLOOD MATCH =================
 def is_compatible(donor, recipient):
     rules = {
         "O-": ["O-","O+","A-","A+","B-","B+","AB-","AB+"],
@@ -45,33 +34,16 @@ def is_compatible(donor, recipient):
     }
     return recipient in rules.get(donor, [])
 
-# ================= DB =================
-def get_db():
-    return mysql.connector.connect(
-        host=MYSQL_HOST,
-        user=MYSQL_USER,
-        password=MYSQL_PASSWORD,
-        database=MYSQL_DATABASE
-    )
-
 # ================= HOME =================
 @app.route('/')
 def home():
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
-    cursor.execute("""
-        SELECT full_name, city, blood_type, latitude, longitude
-        FROM donors
-        WHERE is_available = 1
-    """)
+    cursor.execute("SELECT * FROM donors WHERE is_available=1")
     donors = cursor.fetchall()
 
-    cursor.close()
-    db.close()
-
-    return render_template(
-        "index.html",
+    return render_template("index.html",
         donors=donors,
         user=session.get('user_name'),
         user_pic=session.get('user_pic')
@@ -87,9 +59,7 @@ def login():
         "client_id": GOOGLE_CLIENT_ID,
         "redirect_uri": REDIRECT_URI,
         "response_type": "code",
-        "scope": "openid email profile",
-        "access_type": "offline",
-        "prompt": "consent"
+        "scope": "openid email profile"
     }
 
     google_login_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
@@ -98,53 +68,30 @@ def login():
 
 # ================= CALLBACK =================
 @app.route('/login/callback')
-def login_callback():
+def callback():
     code = request.args.get('code')
 
-    if not code:
-        return "No code received"
+    token = http_requests.post("https://oauth2.googleapis.com/token", data={
+        'code': code,
+        'client_id': GOOGLE_CLIENT_ID,
+        'client_secret': GOOGLE_CLIENT_SECRET,
+        'redirect_uri': REDIRECT_URI,
+        'grant_type': 'authorization_code'
+    }).json()
 
-    try:
-        token_resp = http_requests.post(
-            "https://oauth2.googleapis.com/token",
-            data={
-                'code': code,
-                'client_id': GOOGLE_CLIENT_ID,
-                'client_secret': GOOGLE_CLIENT_SECRET,
-                'redirect_uri': REDIRECT_URI,
-                'grant_type': 'authorization_code'
-            }
-        )
+    user = http_requests.get(
+        "https://www.googleapis.com/oauth2/v2/userinfo",
+        headers={'Authorization': 'Bearer ' + token['access_token']}
+    ).json()
 
-        token_data = token_resp.json()
+    session['user_name'] = user.get('name')
+    session['user_pic'] = user.get('picture')
+    session['logged_in'] = True
 
-        if 'access_token' not in token_data:
-            return f"Token Error: {token_data}"
+    if user.get('email') == "msci.2323@unigoa.ac.in":
+        session['is_admin'] = True
 
-        access_token = token_data['access_token']
-
-        user_resp = http_requests.get(
-            "https://www.googleapis.com/oauth2/v2/userinfo",
-            headers={'Authorization': 'Bearer ' + access_token}
-        )
-
-        user_info = user_resp.json()
-
-        session.clear()
-        session['user_name'] = user_info.get('name')
-        session['user_email'] = user_info.get('email')
-        session['user_pic'] = user_info.get('picture')
-        session['logged_in'] = True
-
-        email = user_info.get('email')
-        session['is_admin'] = (
-            email and email.strip().lower() == "msci.2323@unigoa.ac.in"
-        )
-
-        return redirect('/')
-
-    except Exception as e:
-        return f"Error: {str(e)}"
+    return redirect('/')
 
 # ================= LOGOUT =================
 @app.route('/logout')
@@ -157,103 +104,63 @@ def logout():
 def donor():
     db = get_db()
     cursor = db.cursor(dictionary=True)
-
-    cursor.execute("SELECT * FROM donors ORDER BY created_at DESC")
+    cursor.execute("SELECT * FROM donors")
     donors = cursor.fetchall()
-
-    cursor.close()
-    db.close()
 
     return render_template("donor.html", donors=donors)
 
 @app.route('/donor/register', methods=['POST'])
-def donor_register():
+def register():
     db = get_db()
     cursor = db.cursor()
 
-    send_alert("New donor registered in Goa")
-
     donor_id = 'D' + str(uuid.uuid4())[:6].upper()
-
-    city_coords = {
-        'Panaji': (15.4909, 73.8278),
-        'Margao': (15.2832, 73.9862),
-        'Vasco': (15.3982, 73.8111),
-        'Mapusa': (15.5957, 73.8145)
-    }
-
-    city = request.form['city']
-    lat, lng = city_coords.get(city, (15.2993, 74.1240))
 
     cursor.execute("""
         INSERT INTO donors
-        (donor_id, full_name, email, blood_type,
-         phone, city, latitude, longitude, is_available)
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,1)
+        (donor_id, full_name, email, blood_type, phone, city, is_available)
+        VALUES (%s,%s,%s,%s,%s,%s,1)
     """, (
         donor_id,
         request.form['full_name'],
         request.form['email'],
         request.form['blood_type'],
         request.form['phone'],
-        city, lat, lng
+        request.form['city']
     ))
 
     db.commit()
-    cursor.close()
-    db.close()
-
-    return redirect(url_for('donor'))
+    return redirect('/donor')
 
 # ================= HOSPITAL =================
-@app.route('/hospital', methods=['GET', 'POST'])
+@app.route('/hospital', methods=['GET','POST'])
 def hospital():
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
-    matched_donors = []
+    matched = []
 
     if request.method == 'POST':
-        requested_blood = request.form['blood_type']
+        blood = request.form['blood_type']
 
-        cursor.execute("SELECT * FROM donors WHERE is_available = 1")
+        cursor.execute("SELECT * FROM donors WHERE is_available=1")
         donors = cursor.fetchall()
 
-        matched_donors = [
-            d for d in donors
-            if is_compatible(d['blood_type'], requested_blood)
-        ]
-
-        # ✅ FIXED PUBSUB CALL
-        try:
-            send_alert(f"Blood request: {requested_blood}")
-        except:
-            pass
+        matched = [d for d in donors if is_compatible(d['blood_type'], blood)]
 
     cursor.execute("SELECT * FROM hospitals")
     hospitals = cursor.fetchall()
 
-    cursor.close()
-    db.close()
-
-    return render_template(
-        "hospital.html",
+    return render_template("hospital.html",
         hospitals=hospitals,
-        matched_donors=matched_donors
-    )
+        matched_donors=matched)
 
 # ================= ADMIN =================
 @app.route('/admin')
 def admin():
-    if not session.get('logged_in'):
-        return redirect('/login')
-
     if not session.get('is_admin'):
         return "Access Denied"
-
     return render_template("admin.html")
 
-# ================= RUN =================
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)
