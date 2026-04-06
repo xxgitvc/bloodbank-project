@@ -1,11 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-from google.cloud import pubsub_v1
-import os
 import mysql.connector
 import uuid
 import requests as http_requests
 from config import *
 from urllib.parse import urlencode
+import os
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -13,14 +12,10 @@ app.secret_key = SECRET_KEY
 # ================= GOOGLE CONFIG =================
 REDIRECT_URI = "https://bloodbank-project-b3zs.onrender.com/login/callback"
 
-# ================= PUBSUB CONFIG =================
-PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
-TOPIC_ID = "blood-alerts"
-
+# ================= PUBSUB (SAFE) =================
 def send_alert(message):
     try:
         from google.cloud import pubsub_v1
-        import os
 
         project_id = os.environ.get("GCP_PROJECT_ID")
         if not project_id:
@@ -175,6 +170,7 @@ def donor():
 def donor_register():
     db = get_db()
     cursor = db.cursor()
+
     send_alert("New donor registered in Goa")
 
     donor_id = 'D' + str(uuid.uuid4())[:6].upper()
@@ -209,15 +205,11 @@ def donor_register():
 
     return redirect(url_for('donor'))
 
-# ================= HOSPITAL (MATCHING ENGINE) =================
+# ================= HOSPITAL =================
 @app.route('/hospital', methods=['GET', 'POST'])
 def hospital():
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    try:
-    send_alert(f"Blood request: {requested_blood}")
-except:
-    pass
 
     matched_donors = []
 
@@ -231,6 +223,12 @@ except:
             d for d in donors
             if is_compatible(d['blood_type'], requested_blood)
         ]
+
+        # ✅ FIXED PUBSUB CALL
+        try:
+            send_alert(f"Blood request: {requested_blood}")
+        except:
+            pass
 
     cursor.execute("SELECT * FROM hospitals")
     hospitals = cursor.fetchall()
@@ -256,8 +254,6 @@ def admin():
     return render_template("admin.html")
 
 # ================= RUN =================
-import os
-
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
