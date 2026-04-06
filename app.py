@@ -5,11 +5,41 @@ import requests as http_requests
 from config import *
 from urllib.parse import urlencode
 
+# 🔔 PubSub
+from google.cloud import pubsub_v1
+
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
 # ================= GOOGLE CONFIG =================
 REDIRECT_URI = "https://bloodbank-project-b3zs.onrender.com/login/callback"
+
+# ================= PUBSUB CONFIG =================
+PROJECT_ID = "your-project-id"   # 🔥 change this
+TOPIC_ID = "blood-alerts"
+
+publisher = pubsub_v1.PublisherClient()
+topic_path = publisher.topic_path(PROJECT_ID, TOPIC_ID)
+
+def send_alert(message):
+    try:
+        publisher.publish(topic_path, message.encode("utf-8"))
+    except:
+        print("PubSub failed (ignore for demo)")
+
+# ================= BLOOD MATCHING =================
+def is_compatible(donor, recipient):
+    rules = {
+        "O-": ["O-","O+","A-","A+","B-","B+","AB-","AB+"],
+        "O+": ["O+","A+","B+","AB+"],
+        "A-": ["A-","A+","AB-","AB+"],
+        "A+": ["A+","AB+"],
+        "B-": ["B-","B+","AB-","AB+"],
+        "B+": ["B+","AB+"],
+        "AB-": ["AB-","AB+"],
+        "AB+": ["AB+"]
+    }
+    return recipient in rules.get(donor, [])
 
 # ================= DB =================
 def get_db():
@@ -43,7 +73,7 @@ def home():
         user_pic=session.get('user_pic')
     )
 
-# ================= LOGIN (FINAL FIXED) =================
+# ================= LOGIN =================
 @app.route('/login')
 def login():
     if session.get('logged_in'):
@@ -96,7 +126,6 @@ def login_callback():
 
         user_info = user_resp.json()
 
-        # 🔥 FIX SESSION
         session.clear()
 
         session['user_name'] = user_info.get('name')
@@ -104,7 +133,6 @@ def login_callback():
         session['user_pic'] = user_info.get('picture')
         session['logged_in'] = True
 
-        # ADMIN CHECK
         email = user_info.get('email')
         session['is_admin'] = (
             email and email.strip().lower() == "msci.2323@unigoa.ac.in"
@@ -170,16 +198,36 @@ def donor_register():
     ))
 
     db.commit()
+
+    # 🔔 ALERT
+    send_alert("New donor registered in Goa")
+
     cursor.close()
     db.close()
 
     return redirect(url_for('donor'))
 
 # ================= HOSPITAL =================
-@app.route('/hospital')
+@app.route('/hospital', methods=['GET', 'POST'])
 def hospital():
     db = get_db()
     cursor = db.cursor(dictionary=True)
+
+    matched_donors = []
+
+    if request.method == 'POST':
+        requested_blood = request.form['blood_type']
+
+        cursor.execute("SELECT * FROM donors WHERE is_available = 1")
+        donors = cursor.fetchall()
+
+        matched_donors = [
+            d for d in donors
+            if is_compatible(d['blood_type'], requested_blood)
+        ]
+
+        # 🔔 ALERT
+        send_alert("New blood request created")
 
     cursor.execute("SELECT * FROM hospitals")
     hospitals = cursor.fetchall()
@@ -187,7 +235,11 @@ def hospital():
     cursor.close()
     db.close()
 
-    return render_template("hospital.html", hospitals=hospitals)
+    return render_template(
+        "hospital.html",
+        hospitals=hospitals,
+        matched_donors=matched_donors
+    )
 
 # ================= ADMIN =================
 @app.route('/admin')
