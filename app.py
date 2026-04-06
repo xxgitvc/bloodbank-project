@@ -9,11 +9,8 @@ app.secret_key = SECRET_KEY
 
 # ================= GOOGLE CONFIG =================
 REDIRECT_URI = "https://bloodbank-project-b3zs.onrender.com/login/callback"
-GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
-GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
-GOOGLE_USER_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 
-# ================= DB CONNECTION =================
+# ================= DB =================
 def get_db():
     return mysql.connector.connect(
         host=MYSQL_HOST,
@@ -49,15 +46,16 @@ def home():
 @app.route('/login')
 def login():
     if session.get('logged_in'):
-        return redirect(url_for('home'))
+        return redirect('/')
 
     google_login_url = (
-        GOOGLE_AUTH_URL +
+        "https://accounts.google.com/o/oauth2/v2/auth"
         "?client_id=" + GOOGLE_CLIENT_ID +
         "&redirect_uri=" + REDIRECT_URI +
         "&response_type=code" +
         "&scope=openid%20email%20profile" +
-        "&access_type=offline"
+        "&access_type=offline" +
+        "&prompt=consent"
     )
 
     return render_template("login.html", google_login_url=google_login_url)
@@ -72,7 +70,7 @@ def login_callback():
 
     try:
         token_resp = http_requests.post(
-            GOOGLE_TOKEN_URL,
+            "https://oauth2.googleapis.com/token",
             data={
                 'code': code,
                 'client_id': GOOGLE_CLIENT_ID,
@@ -90,13 +88,13 @@ def login_callback():
         access_token = token_data['access_token']
 
         user_resp = http_requests.get(
-            GOOGLE_USER_URL,
+            "https://www.googleapis.com/oauth2/v2/userinfo",
             headers={'Authorization': 'Bearer ' + access_token}
         )
 
         user_info = user_resp.json()
 
-        # 🔥 FIX: clear old session
+        # 🔥 IMPORTANT FIX
         session.clear()
 
         session['user_name'] = user_info.get('name')
