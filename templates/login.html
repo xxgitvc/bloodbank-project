@@ -1,17 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Login</title>
-</head>
-<body style="text-align:center;margin-top:100px">
+<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+<style>
+body{
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+background:linear-gradient(135deg,#cc0000,#ff4d4d);
+font-family:Poppins;
+color:white;
+}
 
-<h1>BloodBank Login</h1>
+.card{
+background:white;
+color:black;
+padding:40px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 10px 30px rgba(0,0,0,0.2)
+}
+
+button{
+background:#cc0000;
+color:white;
+padding:12px 25px;
+border:none;
+border-radius:25px;
+cursor:pointer
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h2>Welcome to BloodBank</h2>
 
 <a href="{{ google_login_url }}">
-<button style="padding:15px;background:red;color:white;border:none">
-Sign in with Google
-</button>
+<button>Sign in with Google</button>
 </a>
+
+</div>
 
 </body>
 </html>
