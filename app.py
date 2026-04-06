@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+from google.cloud import pubsub_v1
+import os
 import mysql.connector
 import uuid
 import requests as http_requests
@@ -10,6 +12,21 @@ app.secret_key = SECRET_KEY
 
 # ================= GOOGLE CONFIG =================
 REDIRECT_URI = "https://bloodbank-project-b3zs.onrender.com/login/callback"
+
+# ================= PUBSUB CONFIG =================
+PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
+TOPIC_ID = "blood-alerts"
+
+def send_alert(message):
+    try:
+        publisher = pubsub_v1.PublisherClient()
+        topic_path = publisher.topic_path(PROJECT_ID, TOPIC_ID)
+
+        publisher.publish(topic_path, message.encode("utf-8"))
+        print("Alert sent:", message)
+
+    except Exception as e:
+        print("PubSub disabled:", e)
 
 # ================= BLOOD MATCHING =================
 def is_compatible(donor, recipient):
@@ -150,6 +167,7 @@ def donor():
 def donor_register():
     db = get_db()
     cursor = db.cursor()
+    send_alert("New donor registered in Goa")
 
     donor_id = 'D' + str(uuid.uuid4())[:6].upper()
 
@@ -188,6 +206,7 @@ def donor_register():
 def hospital():
     db = get_db()
     cursor = db.cursor(dictionary=True)
+    send_alert(f"Blood request: {requested_blood}")
 
     matched_donors = []
 
