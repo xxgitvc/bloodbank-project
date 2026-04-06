@@ -205,16 +205,18 @@ button:hover{
   <!-- ================= MATCHED DONORS ================= -->
   {% if matched_donors %}
   <div style="margin-top:30px;">
-    <h2 style="color:#CC0000;">🧬 Matching Donors</h2>
+    <h2 class="section-title">🧬 Matching Donors</h2>
 
-    <div class="hospitals-grid">
-      {% for d in matched_donors %}
-      <div class="hosp-card">
-        <h3>{{ d.full_name }}</h3>
-        <p><b>Blood:</b> {{ d.blood_type }}</p>
-        <p><b>City:</b> {{ d.city }}</p>
-        <p><b>Phone:</b> {{ d.phone }}</p>
-      </div>
+<div class="hospitals-grid">
+  {% for d in matched_donors %}
+  <div class="hosp-card">
+    <h3>{{ d.full_name }}</h3>
+    <p>🩸 <b>{{ d.blood_type }}</b></p>
+    <p>📍 {{ d.city }}</p>
+    <p>📞 {{ d.phone }}</p>
+  </div>
+  {% endfor %}
+</div>
       {% endfor %}
     </div>
   </div>
