@@ -3,6 +3,7 @@ import mysql.connector
 import uuid
 import requests as http_requests
 from config import *
+from urllib.parse import urlencode
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -42,21 +43,22 @@ def home():
         user_pic=session.get('user_pic')
     )
 
-# ================= LOGIN =================
+# ================= LOGIN (FINAL FIXED) =================
 @app.route('/login')
 def login():
     if session.get('logged_in'):
         return redirect('/')
 
-    google_login_url = (
-        "https://accounts.google.com/o/oauth2/v2/auth"
-        "?client_id=" + GOOGLE_CLIENT_ID +
-        "&redirect_uri=" + REDIRECT_URI +
-        "&response_type=code" +
-        "&scope=openid%20email%20profile" +
-        "&access_type=offline" +
-        "&prompt=consent"
-    )
+    params = {
+        "client_id": GOOGLE_CLIENT_ID,
+        "redirect_uri": REDIRECT_URI,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "access_type": "offline",
+        "prompt": "consent"
+    }
+
+    google_login_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
 
     return render_template("login.html", google_login_url=google_login_url)
 
@@ -94,7 +96,7 @@ def login_callback():
 
         user_info = user_resp.json()
 
-        # 🔥 IMPORTANT FIX
+        # 🔥 FIX SESSION
         session.clear()
 
         session['user_name'] = user_info.get('name')
