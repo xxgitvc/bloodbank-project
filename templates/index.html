@@ -1,237 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
-<head link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<html>
+<head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BloodBank Goa - GCP</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<title>BloodBank Goa</title>
 
 <style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Poppins',sans-serif;
-}
-
-body{
-    background:#f8f9fb;
-    color:#333;
-}
-
-/* NAVBAR */
-nav{
-    background:linear-gradient(90deg,#cc0000,#ff4d4d);
-    padding:14px 32px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    box-shadow:0 4px 12px rgba(0,0,0,0.1);
-}
-
-.logo{
-    color:#fff;
-    font-size:22px;
-    font-weight:600;
-}
-
-.nav-links a{
-    color:#fff;
-    text-decoration:none;
-    margin-left:10px;
-    padding:8px 16px;
-    border-radius:20px;
-    border:1px solid rgba(255,255,255,0.4);
-    transition:0.3s;
-}
-
-.nav-links a:hover{
-    background:#fff;
-    color:#cc0000;
-}
-
-.signin{
-    background:#fff !important;
-    color:#cc0000 !important;
-    font-weight:600;
-}
-
-/* HEADER */
-.page-header{
-    background:linear-gradient(135deg,#cc0000,#ff4d4d);
-    color:#fff;
-    text-align:center;
-    padding:60px 20px;
-}
-
-.page-header h1{
-    font-size:34px;
-    font-weight:600;
-}
-
-/* CONTAINER */
-.container{
-    max-width:1100px;
-    margin:auto;
-    padding:30px;
-}
-
-/* CARD */
-.form-card{
-    background:#fff;
-    border-radius:16px;
-    padding:30px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.08);
-}
-
-/* FORM */
-.form-group{
-    margin-bottom:18px;
-}
-
-label{
-    font-weight:500;
-    display:block;
-    margin-bottom:6px;
-}
-
-select,input{
-    width:100%;
-    padding:10px;
-    border-radius:8px;
-    border:1px solid #ddd;
-}
-
-/* BUTTON */
-button{
-    background:#cc0000;
-    color:#fff;
-    padding:12px 22px;
-    border:none;
-    border-radius:25px;
-    font-weight:600;
-    cursor:pointer;
-    transition:0.3s;
-}
-
-button:hover{
-    background:#ff3333;
-}
-
-/* GRID */
-.hospitals-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-    gap:20px;
-    margin-top:20px;
-}
-
-/* CARD ITEM */
-.hosp-card{
-    background:#fff;
-    border-radius:14px;
-    padding:18px;
-    box-shadow:0 6px 15px rgba(0,0,0,0.08);
-    transition:0.3s;
-}
-
-.hosp-card:hover{
-    transform:translateY(-5px);
-}
-
-/* TITLE */
-.section-title{
-    margin-top:30px;
-    color:#cc0000;
-    font-weight:600;
-    font-size:22px;
-}
+body{font-family:Poppins;background:#f8f9fb;margin:0}
+nav{background:#cc0000;padding:15px;color:#fff;display:flex;justify-content:space-between}
+a{color:#fff;text-decoration:none;margin-left:10px}
+.hero{padding:60px;text-align:center;background:#ff4d4d;color:#fff}
+.section{padding:30px}
+.card{background:#fff;padding:15px;margin:10px;border-radius:10px}
 </style>
 </head>
 
 <body>
 
-<!-- ================= NAVBAR ================= -->
 <nav>
-  <div class="logo">🩸 BloodBank Goa</div>
-
-  <div class="nav-links">
+  <div>🩸 BloodBank Goa</div>
+  <div>
     <a href="/donor">Donor</a>
     <a href="/hospital">Hospital</a>
 
     {% if user %}
-        <img src="{{ user_pic }}" class="user-pic">
-        <span class="user-name">{{ user }}</span>
-
-        {% if session.get('is_admin') %}
-            <a href="/admin">Admin</a>
-        {% endif %}
-
-        <a href="/logout">Logout</a>
+      <img src="{{ user_pic }}" width="30">
+      {{ user }}
+      {% if session.get('is_admin') %}
+        <a href="/admin">Admin</a>
+      {% endif %}
+      <a href="/logout">Logout</a>
     {% else %}
-        <a href="/login" class="signin">Login</a>
+      <a href="/login">Login</a>
     {% endif %}
   </div>
 </nav>
 
-<!-- ================= HERO ================= -->
 <div class="hero">
-  <h1>Saving Lives Across <span>Goa</span></h1>
+<h1>Saving Lives Across Goa</h1>
 </div>
 
-<!-- ================= HOSPITALS ================= -->
-<div class="section grey">
-  <h2>Hospitals in Goa</h2>
-
-  <div class="hospitals">
-    <div class="hosp-card">Goa Medical College</div>
-    <div class="hosp-card">Apollo Hospital</div>
-    <div class="hosp-card">Manipal Hospital</div>
-  </div>
-</div>
-
-<!-- ================= MAP ================= -->
 <div class="section">
-  <h2>Live Donor Locations (Cloud Synced)</h2>
+<h2>Live Donor Locations</h2>
 
-  <div id="map" style="height:400px; width:100%; border-radius:12px;"></div>
+<div id="map" style="height:400px"></div>
 
-  <script>
-  function initMap() {
-      var goa = { lat: 15.2993, lng: 74.1240 };
+<script>
+function initMap(){
+let map=new google.maps.Map(document.getElementById("map"),{
+zoom:10,center:{lat:15.2993,lng:74.1240}
+});
 
-      var map = new google.maps.Map(document.getElementById("map"), {
-          zoom: 10,
-          center: goa
-      });
+let donors={{ donors|tojson }};
+donors.forEach(d=>{
+if(d.latitude){
+new google.maps.Marker({
+position:{lat:parseFloat(d.latitude),lng:parseFloat(d.longitude)},
+map:map
+});
+}});
+}
+</script>
 
-      var donors = {{ donors | tojson }};
-
-      donors.forEach(d => {
-          if (d.latitude && d.longitude) {
-              new google.maps.Marker({
-                  position: {
-                      lat: parseFloat(d.latitude),
-                      lng: parseFloat(d.longitude)
-                  },
-                  map: map,
-                  title: d.full_name + " (" + d.blood_type + ")"
-              });
-          }
-      });
-  }
-  </script>
-
-  <script async defer
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBFLxcm3jBnFE7ii7fKKeneZ3I3FPshnbU&callback=initMap">
-  </script>
-
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY&callback=initMap" async></script>
 </div>
-
-<!-- ================= FOOTER ================= -->
-<footer>
-  <p>🩸 BloodBank Goa — Cloud Powered System</p>
-  <p>Real-time donor tracking across Goa</p>
-</footer>
 
 </body>
 </html>
