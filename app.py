@@ -5,27 +5,11 @@ import requests as http_requests
 from config import *
 from urllib.parse import urlencode
 
-# 🔔 PubSub
-from google.cloud import pubsub_v1
-
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
 # ================= GOOGLE CONFIG =================
 REDIRECT_URI = "https://bloodbank-project-b3zs.onrender.com/login/callback"
-
-# ================= PUBSUB CONFIG =================
-PROJECT_ID = "your-project-id"   # 🔥 change this
-TOPIC_ID = "blood-alerts"
-
-publisher = pubsub_v1.PublisherClient()
-topic_path = publisher.topic_path(PROJECT_ID, TOPIC_ID)
-
-def send_alert(message):
-    try:
-        publisher.publish(topic_path, message.encode("utf-8"))
-    except:
-        print("PubSub failed (ignore for demo)")
 
 # ================= BLOOD MATCHING =================
 def is_compatible(donor, recipient):
@@ -127,7 +111,6 @@ def login_callback():
         user_info = user_resp.json()
 
         session.clear()
-
         session['user_name'] = user_info.get('name')
         session['user_email'] = user_info.get('email')
         session['user_pic'] = user_info.get('picture')
@@ -174,10 +157,7 @@ def donor_register():
         'Panaji': (15.4909, 73.8278),
         'Margao': (15.2832, 73.9862),
         'Vasco': (15.3982, 73.8111),
-        'Mapusa': (15.5957, 73.8145),
-        'Ponda': (15.4037, 74.0093),
-        'Calangute': (15.5440, 73.7528),
-        'Canacona': (15.0142, 74.0308)
+        'Mapusa': (15.5957, 73.8145)
     }
 
     city = request.form['city']
@@ -198,16 +178,12 @@ def donor_register():
     ))
 
     db.commit()
-
-    # 🔔 ALERT
-    send_alert("New donor registered in Goa")
-
     cursor.close()
     db.close()
 
     return redirect(url_for('donor'))
 
-# ================= HOSPITAL =================
+# ================= HOSPITAL (MATCHING ENGINE) =================
 @app.route('/hospital', methods=['GET', 'POST'])
 def hospital():
     db = get_db()
@@ -225,9 +201,6 @@ def hospital():
             d for d in donors
             if is_compatible(d['blood_type'], requested_blood)
         ]
-
-        # 🔔 ALERT
-        send_alert("New blood request created")
 
     cursor.execute("SELECT * FROM hospitals")
     hospitals = cursor.fetchall()
@@ -253,5 +226,8 @@ def admin():
     return render_template("admin.html")
 
 # ================= RUN =================
+import os
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
