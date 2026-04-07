@@ -237,6 +237,42 @@ def donor_register():
 
 
 # ================= HOSPITAL REQUEST (UPDATED WITH MATCHING) =================
+
+@app.route('/hospital')
+@app.route('/hospital/')
+def hospital():
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM hospitals ORDER BY city")
+    hospitals = cursor.fetchall()
+
+    cursor.execute("SELECT * FROM blood_inventory WHERE status='AVAILABLE'")
+    inventory = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT r.*, h.hospital_name
+        FROM blood_requests r
+        JOIN hospitals h
+        ON r.hospital_id = h.hospital_id
+        ORDER BY r.requested_at DESC
+    """)
+    requests_list = cursor.fetchall()
+
+    cursor.close()
+    db.close()
+
+    return render_template('hospital.html',
+        hospitals=hospitals,
+        inventory=inventory,
+        requests=requests_list,
+        hospital_count=len(hospitals),
+        inventory_count=len(inventory),
+        request_count=len(requests_list),
+        pending_count=sum(1 for r in requests_list if r['status']=='PENDING'),
+        user=session.get('user_name'),
+        user_pic=session.get('user_pic'))
+    
 @app.route('/hospital/request', methods=['POST'])
 def hospital_request():
     db = get_db()
