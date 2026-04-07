@@ -271,6 +271,15 @@ footer p{margin:5px 0;opacity:0.9}
   </div>
 </div>
 
+<!-- MAP SECTION -->
+<div class="map-section">
+  <div style="text-align:center;padding:40px 40px 20px;background:#fff">
+    <div class="section-title">🗺️ Donors & Hospitals Across Goa</div>
+    <div class="section-sub">Live map showing all registered donors and hospitals in Goa</div>
+  </div>
+  <div id="map"></div>
+</div>
+
 <div class="emergency">
   <h2>🚨 Emergency in Goa?</h2>
   <p>Need blood urgently at any Goa hospital? Submit a request now and we find the nearest match instantly!</p>
@@ -282,5 +291,116 @@ footer p{margin:5px 0;opacity:0.9}
   <p>Serving all hospitals across Goa ❤️ | Built with Flask, Cloud SQL, Pub/Sub & Maps API</p>
 </footer>
 
+<script>
+function initMap() {
+  // Center on Goa
+  const goaCenter = { lat: 15.2993, lng: 74.1240 };
+
+  const map = new google.maps.Map(document.getElementById("map"), {
+    zoom: 10,
+    center: goaCenter,
+    mapTypeId: "roadmap",
+    styles: [
+      { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }
+    ]
+  });
+
+  // Hospital locations
+  const hospitals = [
+    { name: "Goa Medical College Hospital", lat: 15.4569, lng: 73.8092, type: "govt" },
+    { name: "Apollo Victor Hospital",        lat: 15.2721, lng: 73.9956, type: "pvt"  },
+    { name: "Asilo Hospital",                lat: 15.5957, lng: 73.8145, type: "govt" },
+    { name: "South Goa District Hospital",   lat: 15.2832, lng: 73.9862, type: "govt" },
+    { name: "Salgaocar Medical Research",    lat: 15.3982, lng: 73.8111, type: "pvt"  },
+    { name: "Manipal Hospital Goa",          lat: 15.4909, lng: 73.8278, type: "pvt"  },
+    { name: "Hospicio Hospital",             lat: 15.2760, lng: 73.9830, type: "pvt"  },
+    { name: "ESI Hospital Margao",           lat: 15.2795, lng: 73.9920, type: "govt" }
+  ];
+
+  // Donor city locations (from your city_coords in app.py)
+  const donorCities = [
+    { name: "Panaji",    lat: 15.4909, lng: 73.8278 },
+    { name: "Margao",    lat: 15.2832, lng: 73.9862 },
+    { name: "Vasco",     lat: 15.3982, lng: 73.8111 },
+    { name: "Mapusa",    lat: 15.5957, lng: 73.8145 },
+    { name: "Ponda",     lat: 15.4037, lng: 74.0093 },
+    { name: "Calangute", lat: 15.5440, lng: 73.7528 },
+    { name: "Pernem",    lat: 15.7197, lng: 73.7982 },
+    { name: "Canacona",  lat: 15.0142, lng: 74.0308 },
+    { name: "Bicholim",  lat: 15.5957, lng: 73.9503 },
+    { name: "Quepem",    lat: 15.2122, lng: 74.0772 }
+  ];
+
+  const infoWindow = new google.maps.InfoWindow();
+
+  // Hospital markers — red cross icon
+  hospitals.forEach(h => {
+    const marker = new google.maps.Marker({
+      position: { lat: h.lat, lng: h.lng },
+      map: map,
+      title: h.name,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 12,
+        fillColor: h.type === "govt" ? "#2e7d32" : "#CC0000",
+        fillOpacity: 1,
+        strokeColor: "#fff",
+        strokeWeight: 2
+      },
+      label: { text: "🏥", fontSize: "14px" }
+    });
+    marker.addListener("click", () => {
+      infoWindow.setContent(
+        `<div style="font-family:Segoe UI,sans-serif;padding:6px">
+          <strong style="font-size:14px">🏥 ${h.name}</strong><br>
+          <span style="color:#888;font-size:12px">${h.type === "govt" ? "🟢 Government" : "🔴 Private"} Hospital</span>
+        </div>`
+      );
+      infoWindow.open(map, marker);
+    });
+  });
+
+  // Donor city markers — blood drop style
+  donorCities.forEach(c => {
+    const marker = new google.maps.Marker({
+      position: { lat: c.lat, lng: c.lng },
+      map: map,
+      title: c.name + " — Donor Zone",
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 9,
+        fillColor: "#FF4444",
+        fillOpacity: 0.75,
+        strokeColor: "#CC0000",
+        strokeWeight: 2
+      }
+    });
+    marker.addListener("click", () => {
+      infoWindow.setContent(
+        `<div style="font-family:Segoe UI,sans-serif;padding:6px">
+          <strong style="font-size:14px">🩸 ${c.name}</strong><br>
+          <span style="color:#888;font-size:12px">Donor zone in Goa</span>
+        </div>`
+      );
+      infoWindow.open(map, marker);
+    });
+  });
+
+  // Legend
+  const legend = document.createElement("div");
+  legend.style = "background:#fff;padding:12px 16px;margin:10px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.2);font-family:Segoe UI,sans-serif;font-size:13px;line-height:2";
+  legend.innerHTML = `
+    <strong style="font-size:13px">Map Legend</strong><br>
+    <span style="color:#2e7d32">●</span> Government Hospital<br>
+    <span style="color:#CC0000">●</span> Private Hospital<br>
+    <span style="color:#FF4444">●</span> Donor Zone
+  `;
+  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
+}
+</script>
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key={{ maps_key }}&callback=initMap">
+</script>
 </body>
 </html>
+
