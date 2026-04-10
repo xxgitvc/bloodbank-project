@@ -47,30 +47,35 @@ def init_db_pool():
     global db_pool
     if db_pool is None:
         try:
-            db_pool = mysql.connector.pooling.MySQLConnectionPool(
+            host_val = MYSQL_HOST  # e.g. /cloudsql/project:region:instance
+
+            pool_kwargs = dict(
                 pool_name="bloodbank_pool",
                 pool_size=5,
-                host=MYSQL_HOST,
                 user=MYSQL_USER,
                 password=MYSQL_PASSWORD,
                 database=MYSQL_DATABASE,
             )
+
+            # Unix socket path (Cloud Run + Cloud SQL)
+            if host_val.startswith("/"):
+                pool_kwargs["unix_socket"] = host_val
+            else:
+                pool_kwargs["host"] = host_val  # TCP fallback for local dev
+
+            db_pool = mysql.connector.pooling.MySQLConnectionPool(**pool_kwargs)
             print("✅ DB pool initialized")
         except Exception as e:
             print(f"❌ DB pool init failed: {e}")
+            db_pool = None
+            raise
 
 
 def get_db():
     global db_pool
-
     if db_pool is None:
         init_db_pool()
-
-    try:
-        return db_pool.get_connection()
-    except Exception as e:
-        print(f"❌ DB connection failed: {e}")
-        raise
+    return db_pool.get_connection()
 
 
 # ── MATCHING LOGIC ───────────────────────────────────────────────────────────
@@ -557,6 +562,10 @@ def cancel_request(request_id):
 
 
 # ── RUN ────────────────────────────────────────────────────────────────────────
+# Initialise DB pool at startup so connection issues surface immediately in logs
+with app.app_context():
+    init_db_pool()
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
