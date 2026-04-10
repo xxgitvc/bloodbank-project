@@ -270,20 +270,35 @@ def hospital():
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
+    # ✅ Admin emails
+    ADMIN_EMAILS = [
+        "msci.2323@unigoa.ac.in",
+        "msci.2312@unigoa.ac.in"
+    ]
+
+    user_email = session.get('user_email')
+    is_admin = user_email in ADMIN_EMAILS
+
+    # Get hospitals
     cursor.execute("SELECT * FROM hospitals ORDER BY city")
     hospitals = cursor.fetchall()
 
+    # Get inventory
     cursor.execute("SELECT * FROM blood_inventory WHERE status='AVAILABLE'")
     inventory = cursor.fetchall()
 
-    cursor.execute("""
-        SELECT r.*, h.hospital_name
-        FROM blood_requests r
-        JOIN hospitals h
-        ON r.hospital_id = h.hospital_id
-        ORDER BY r.requested_at DESC
-    """)
-    requests_list = cursor.fetchall()
+    # ✅ Only admin can see requests
+    if is_admin:
+        cursor.execute("""
+            SELECT r.*, h.hospital_name
+            FROM blood_requests r
+            JOIN hospitals h
+            ON r.hospital_id = h.hospital_id
+            ORDER BY r.requested_at DESC
+        """)
+        requests_list = cursor.fetchall()
+    else:
+        requests_list = []
 
     cursor.close()
     db.close()
@@ -295,10 +310,15 @@ def hospital():
         hospital_count=len(hospitals),
         inventory_count=len(inventory),
         request_count=len(requests_list),
-        pending_count=sum(1 for r in requests_list if r['status']=='PENDING'),
+        pending_count=sum(1 for r in requests_list if r['status'] == 'PENDING'),
+        is_admin=is_admin,   # 👈 IMPORTANT
         user=session.get('user_name'),
-        user_pic=session.get('user_pic'))
-    
+        user_pic=session.get('user_pic')
+    )
+
+
+# ================= HOSPITAL REQUEST =================
+
 @app.route('/hospital/request', methods=['POST'])
 def hospital_request():
     db = get_db()
@@ -310,6 +330,7 @@ def hospital_request():
     units = request.form['units_needed']
     urgency = request.form['urgency']
 
+    # Insert request
     cursor.execute("""
         INSERT INTO blood_requests
         (request_id, hospital_id, blood_type, units_needed, urgency, status)
