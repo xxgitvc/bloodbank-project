@@ -151,67 +151,87 @@ footer p{margin:5px 0;opacity:0.9}
   </div>
 
   <!-- REQUEST BLOOD -->
-  <div id="request" class="tab-content active">
-    <div class="form-card">
-      <h2>🚨 Request Blood</h2>
-      <p>Submit an emergency blood request — we'll find the nearest available donors instantly</p>
-      <form method="POST" action="/hospital/request">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Hospital</label>
-            <select name="hospital_id" required>
-              <option value="">Select Hospital</option>
-              {% for h in hospitals %}
-              <option value="{{ h.hospital_id }}">{{ h.hospital_name }} — {{ h.city }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Blood Type Required</label>
-            <select name="blood_type" required>
-              <option value="">Select Blood Type</option>
-              <option value="A+">A+</option><option value="A-">A-</option>
-              <option value="B+">B+</option><option value="B-">B-</option>
-              <option value="AB+">AB+</option><option value="AB-">AB-</option>
-              <option value="O+">O+</option><option value="O-">O-</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Units Needed</label>
-            <input type="number" name="units_needed" min="1" max="20" placeholder="1" required>
-          </div>
-          <div class="form-group">
-            <label>Urgency Level</label>
-            <select name="urgency" required>
-              <option value="">Select Urgency</option>
-              <option value="CRITICAL">🔴 Critical</option>
-              <option value="URGENT">🟠 Urgent</option>
-              <option value="NORMAL">🔵 Normal</option>
-            </select>
-          </div>
-        </div>
-        <button type="submit" class="btn-submit">🚨 Submit Blood Request</button>
-      </form>
+<div id="request" class="tab-content active">
+  <div class="form-card">
+    <h2>🚨 Request Blood</h2>
+    <p>Submit an emergency blood request — we'll find the nearest available donors instantly</p>
+
+    <!-- ✅ SUCCESS MESSAGE -->
+    <div class="success-msg" id="success">
+      ✓ Blood request submitted successfully!
     </div>
 
-    {% if matched_donors %}
-    <div style="margin-top:30px">
-      <div class="section-label">🧬 Matching Donors Found</div>
-      <div class="donors-grid">
-        {% for d in matched_donors %}
-        <div class="donor-card">
-          <h3>{{ d.full_name }}</h3>
-          <p>📍 {{ d.city }}, Goa</p>
-          <p>📞 {{ d.phone }}</p>
-          <span class="blood-badge">{{ d.blood_type }}</span>
+    <form method="POST" action="/hospital/request">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Hospital</label>
+          <select name="hospital_id" required>
+            <option value="">Select Hospital</option>
+            {% for h in hospitals %}
+            <option value="{{ h.hospital_id }}">
+              {{ h.hospital_name }} — {{ h.city }}
+            </option>
+            {% endfor %}
+          </select>
         </div>
-        {% endfor %}
+
+        <div class="form-group">
+          <label>Blood Type Required</label>
+          <select name="blood_type" required>
+            <option value="">Select Blood Type</option>
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
+            <option value="O+">O+</option>
+            <option value="O-">O-</option>
+          </select>
+        </div>
       </div>
-    </div>
-    {% endif %}
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Units Needed</label>
+          <input type="number" name="units_needed" min="1" max="20" placeholder="1" required>
+        </div>
+
+        <div class="form-group">
+          <label>Urgency Level</label>
+          <select name="urgency" required>
+            <option value="">Select Urgency</option>
+            <option value="CRITICAL">🔴 Critical</option>
+            <option value="URGENT">🟠 Urgent</option>
+            <option value="NORMAL">🔵 Normal</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit">
+        🚨 Submit Blood Request
+      </button>
+    </form>
   </div>
+
+  <!-- ✅ MATCHED DONORS -->
+  {% if matched_donors %}
+  <div style="margin-top:30px">
+    <div class="section-label">🧬 Matching Donors Found</div>
+
+    <div class="donors-grid">
+      {% for d in matched_donors %}
+      <div class="donor-card">
+        <h3>{{ d.full_name }}</h3>
+        <p>📍 {{ d.city }}, Goa</p>
+        <p>📞 {{ d.phone }}</p>
+        <span class="blood-badge">{{ d.blood_type }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
 
   <!-- ALL HOSPITALS -->
   <div id="hospitals" class="tab-content">
