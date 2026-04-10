@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-import mysql.connector
+import mysql.connector.pooling
 import uuid
 import os
 import math
@@ -13,20 +13,21 @@ from google.cloud import pubsub_v1
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-BASE_URL = os.environ.get("BASE_URL", "http://localhost:8080")
+BASE_URL     = os.environ.get("BASE_URL", "http://localhost:8080")
 REDIRECT_URI = BASE_URL + "/login/callback"
 
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USER_URL  = "https://www.googleapis.com/oauth2/v2/userinfo"
 
-# ── Pub/Sub config ──────────────────────────────────────────────────────────
+# ── Pub/Sub config ───────────────────────────────────────────────────────────
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "your-gcp-project-id")
 PUBSUB_TOPIC   = "blood-request-alerts"
 
-# Initialize ONCE at startup, not per-request
+# Initialise ONCE at startup — not per request
 publisher  = pubsub_v1.PublisherClient()
 topic_path = publisher.topic_path(GCP_PROJECT_ID, PUBSUB_TOPIC)
+
 
 def publish_alert(payload: dict):
     """Publish a blood-request alert to GCP Pub/Sub."""
@@ -38,18 +39,24 @@ def publish_alert(payload: dict):
         print(f"❌ Pub/Sub publish failed: {e}")
 
 
-# ── DATABASE ────────────────────────────────────────────────────────────────
+# ── DATABASE connection pool ─────────────────────────────────────────────────
+# Pool is created ONCE at startup; get_db() checks out a connection from it.
+db_pool = mysql.connector.pooling.MySQLConnectionPool(
+    pool_name="bloodbank_pool",
+    pool_size=5,
+    host=MYSQL_HOST,
+    user=MYSQL_USER,
+    password=MYSQL_PASSWORD,
+    database=MYSQL_DATABASE,
+)
+
+
 def get_db():
-    return mysql.connector.connect(
-        host=MYSQL_HOST,
-        user=MYSQL_USER,
-        password=MYSQL_PASSWORD,
-        database=MYSQL_DATABASE
-    )
+    """Return a pooled connection. Usage is identical to before."""
+    return db_pool.get_connection()
 
 
-# ── MATCHING LOGIC ──────────────────────────────────────────────────────────
-# Compatible blood types: what can a given blood type RECEIVE from
+# ── MATCHING LOGIC ───────────────────────────────────────────────────────────
 COMPATIBLE_DONORS = {
     "A+":  ["A+", "A-", "O+", "O-"],
     "A-":  ["A-", "O-"],
@@ -61,6 +68,7 @@ COMPATIBLE_DONORS = {
     "O-":  ["O-"],
 }
 
+
 def calculate_distance(lat1, lon1, lat2, lon2):
     """Euclidean distance in degrees (fine for Goa's scale)."""
     return math.sqrt((lat1 - lat2) ** 2 + (lon1 - lon2) ** 2)
@@ -71,10 +79,10 @@ def find_nearest_donor(blood_type, hospital_lat, hospital_lon):
     Find the nearest available donor compatible with blood_type,
     using the requesting hospital's actual coordinates.
     """
-    compatible = COMPATIBLE_DONORS.get(blood_type, [blood_type])
+    compatible   = COMPATIBLE_DONORS.get(blood_type, [blood_type])
     placeholders = ", ".join(["%s"] * len(compatible))
 
-    db = get_db()
+    db     = get_db()
     cursor = db.cursor(dictionary=True)
     cursor.execute(f"""
         SELECT * FROM donors
@@ -85,7 +93,7 @@ def find_nearest_donor(blood_type, hospital_lat, hospital_lon):
     cursor.close()
     db.close()
 
-    nearest = None
+    nearest  = None
     min_dist = float("inf")
 
     for d in donors:
@@ -95,14 +103,14 @@ def find_nearest_donor(blood_type, hospital_lat, hospital_lon):
         )
         if dist < min_dist:
             min_dist = dist
-            nearest = d
+            nearest  = d
 
-    return nearest, round(min_dist * 111, 2)   # convert degrees → km
+    return nearest, round(min_dist * 111, 2)   # degrees → km
 
 
-# ── MAP SUPPORT ─────────────────────────────────────────────────────────────
+# ── MAP SUPPORT ──────────────────────────────────────────────────────────────
 def get_all_donors():
-    db = get_db()
+    db     = get_db()
     cursor = db.cursor(dictionary=True)
     cursor.execute("""
         SELECT full_name, blood_type, latitude, longitude
@@ -114,10 +122,10 @@ def get_all_donors():
     return donors
 
 
-# ── HOME ─────────────────────────────────────────────────────────────────────
+# ── HOME ──────────────────────────────────────────────────────────────────────
 @app.route("/")
 def home():
-    db = get_db()
+    db     = get_db()
     cursor = db.cursor(dictionary=True)
 
     cursor.execute("SELECT COUNT(*) as total FROM donors")
@@ -146,7 +154,7 @@ def home():
     )
 
 
-# ── LOGIN ────────────────────────────────────────────────────────────────────
+# ── LOGIN ─────────────────────────────────────────────────────────────────────
 @app.route("/login")
 def login():
     if session.get("logged_in"):
@@ -172,14 +180,14 @@ def login_callback():
     token_resp = http_requests.post(
         GOOGLE_TOKEN_URL,
         data={
-            "code": code,
-            "client_id": GOOGLE_CLIENT_ID,
+            "code":          code,
+            "client_id":     GOOGLE_CLIENT_ID,
             "client_secret": GOOGLE_CLIENT_SECRET,
-            "redirect_uri": REDIRECT_URI,
-            "grant_type": "authorization_code",
+            "redirect_uri":  REDIRECT_URI,
+            "grant_type":    "authorization_code",
         },
     )
-    token_data  = token_resp.json()
+    token_data   = token_resp.json()
     access_token = token_data.get("access_token")
     if not access_token:
         return redirect(url_for("login"))
@@ -204,15 +212,16 @@ def logout():
     return redirect(url_for("home"))
 
 
-# ── DONOR ────────────────────────────────────────────────────────────────────
+# ── DONOR ─────────────────────────────────────────────────────────────────────
 ADMIN_EMAILS = [
     "msci.2323@unigoa.ac.in",
     "msci.2312@unigoa.ac.in",
 ]
 
+
 @app.route("/donor")
 def donor():
-    db = get_db()
+    db     = get_db()
     cursor = db.cursor(dictionary=True)
 
     user_email = session.get("user_email")
@@ -245,11 +254,11 @@ def donor():
 
 @app.route("/donor/register", methods=["POST"])
 def donor_register():
-    db = get_db()
+    db     = get_db()
     cursor = db.cursor()
 
     donor_id = "D" + str(uuid.uuid4())[:6].upper()
-    city = request.form["city"]
+    city     = request.form["city"]
 
     city_coords = {
         "Panaji": (15.4909, 73.8278),
@@ -281,11 +290,11 @@ def donor_register():
     return redirect(url_for("donor", success=1))
 
 
-# ── HOSPITAL ─────────────────────────────────────────────────────────────────
+# ── HOSPITAL ──────────────────────────────────────────────────────────────────
 @app.route("/hospital")
 @app.route("/hospital/")
 def hospital():
-    db = get_db()
+    db     = get_db()
     cursor = db.cursor(dictionary=True)
 
     user_email = session.get("user_email")
@@ -325,10 +334,10 @@ def hospital():
     )
 
 
-# ── HOSPITAL REQUEST (with matching + Pub/Sub) ───────────────────────────────
+# ── HOSPITAL REQUEST (with matching + Pub/Sub) ────────────────────────────────
 @app.route("/hospital/request", methods=["POST"])
 def hospital_request():
-    db = get_db()
+    db     = get_db()
     cursor = db.cursor(dictionary=True)
 
     request_id  = "R" + str(uuid.uuid4())[:6].upper()
@@ -337,7 +346,7 @@ def hospital_request():
     units       = request.form["units_needed"]
     urgency     = request.form["urgency"]
 
-    # ── 1. Fetch requesting hospital's real coordinates ──────────────────────
+    # ── 1. Fetch requesting hospital's real coordinates ───────────────────────
     cursor.execute(
         "SELECT hospital_name, latitude, longitude FROM hospitals WHERE hospital_id = %s",
         (hospital_id,)
@@ -345,8 +354,8 @@ def hospital_request():
     hospital_row = cursor.fetchone()
 
     if hospital_row and hospital_row["latitude"] and hospital_row["longitude"]:
-        h_lat = float(hospital_row["latitude"])
-        h_lon = float(hospital_row["longitude"])
+        h_lat  = float(hospital_row["latitude"])
+        h_lon  = float(hospital_row["longitude"])
         h_name = hospital_row["hospital_name"]
     else:
         # Fallback to Goa centroid if coords missing
@@ -361,6 +370,9 @@ def hospital_request():
     """, (request_id, hospital_id, blood_type, units, urgency))
     db.commit()
 
+    cursor.close()
+    db.close()
+
     # ── 3. Run matching engine ────────────────────────────────────────────────
     nearest, dist_km = find_nearest_donor(blood_type, h_lat, h_lon)
 
@@ -369,50 +381,50 @@ def hospital_request():
 
         # ── 4. Publish alert to Pub/Sub ───────────────────────────────────────
         publish_alert({
-            "event":        "BLOOD_REQUEST_MATCHED",
-            "request_id":   request_id,
-            "hospital_id":  hospital_id,
+            "event":         "BLOOD_REQUEST_MATCHED",
+            "request_id":    request_id,
+            "hospital_id":   hospital_id,
             "hospital_name": h_name,
-            "blood_type":   blood_type,
-            "units_needed": units,
-            "urgency":      urgency,
-            "donor_id":     nearest["donor_id"],
-            "donor_name":   nearest["full_name"],
-            "donor_phone":  nearest["phone"],
-            "donor_email":  nearest["email"],
-            "donor_city":   nearest["city"],
-            "distance_km":  dist_km,
+            "blood_type":    blood_type,
+            "units_needed":  units,
+            "urgency":       urgency,
+            "donor_id":      nearest["donor_id"],
+            "donor_name":    nearest["full_name"],
+            "donor_phone":   nearest["phone"],
+            "donor_email":   nearest["email"],
+            "donor_city":    nearest["city"],
+            "distance_km":   dist_km,
         })
 
         # ── 5. Optionally mark donor as temporarily unavailable ───────────────
         # Uncomment to prevent double-matching on the same donor:
-        # cursor.execute(
+        # db2     = get_db()
+        # cursor2 = db2.cursor()
+        # cursor2.execute(
         #     "UPDATE donors SET is_available = 0 WHERE donor_id = %s",
         #     (nearest["donor_id"],)
         # )
-        # db.commit()
+        # db2.commit()
+        # cursor2.close()
+        # db2.close()
 
     else:
         print(f"❌ NO MATCH found for blood type {blood_type} near {h_name}")
 
-        # Publish a no-match alert so admins are notified
         publish_alert({
-            "event":        "BLOOD_REQUEST_NO_MATCH",
-            "request_id":   request_id,
-            "hospital_id":  hospital_id,
+            "event":         "BLOOD_REQUEST_NO_MATCH",
+            "request_id":    request_id,
+            "hospital_id":   hospital_id,
             "hospital_name": h_name,
-            "blood_type":   blood_type,
-            "units_needed": units,
-            "urgency":      urgency,
+            "blood_type":    blood_type,
+            "units_needed":  units,
+            "urgency":       urgency,
         })
-
-    cursor.close()
-    db.close()
 
     return redirect(url_for("hospital", success=1))
 
 
-# ── Pub/Sub PUSH ENDPOINT (subscriber webhook) ───────────────────────────────
+# ── Pub/Sub PUSH ENDPOINT (subscriber webhook) ────────────────────────────────
 @app.route("/pubsub/push", methods=["POST"])
 def pubsub_push():
     """
@@ -453,13 +465,13 @@ def pubsub_push():
     return "OK", 200
 
 
-# ── ADMIN ─────────────────────────────────────────────────────────────────────
+# ── ADMIN ──────────────────────────────────────────────────────────────────────
 @app.route("/admin")
 def admin():
     if not session.get("logged_in"):
         return redirect(url_for("login"))
 
-    db = get_db()
+    db     = get_db()
     cursor = db.cursor(dictionary=True)
 
     cursor.execute("SELECT * FROM donors ORDER BY created_at DESC")
@@ -501,7 +513,7 @@ def admin():
 
 @app.route("/admin/fulfill/<request_id>", methods=["POST"])
 def fulfill_request(request_id):
-    db = get_db()
+    db     = get_db()
     cursor = db.cursor()
     cursor.execute(
         "UPDATE blood_requests SET status='FULFILLED' WHERE request_id=%s",
@@ -515,7 +527,7 @@ def fulfill_request(request_id):
 
 @app.route("/admin/cancel/<request_id>", methods=["POST"])
 def cancel_request(request_id):
-    db = get_db()
+    db     = get_db()
     cursor = db.cursor()
     cursor.execute(
         "UPDATE blood_requests SET status='CANCELLED' WHERE request_id=%s",
@@ -527,7 +539,7 @@ def cancel_request(request_id):
     return redirect(url_for("admin"))
 
 
-# ── RUN ───────────────────────────────────────────────────────────────────────
+# ── RUN ────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
