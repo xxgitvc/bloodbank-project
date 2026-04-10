@@ -350,7 +350,7 @@ def hospital_request():
     cursor.close()
     db.close()
 
-    return redirect(url_for('hospital'))
+    return redirect(url_for('hospital', success=1))
 
 
 # ================= ADMIN =================
