@@ -20,10 +20,11 @@ nav{background:var(--red);padding:16px 40px;display:flex;justify-content:space-b
 .user-pic{width:36px;height:36px;border-radius:50%;border:2px solid #fff}
 .user-name{color:#fff;font-weight:600;font-size:14px}
 .logout-btn{background:#fff;color:var(--red);padding:7px 16px;border-radius:20px;text-decoration:none;font-weight:700;font-size:13px}
-.hero{background:linear-gradient(135deg,var(--red) 0%,#ff4444 100%);color:#fff;text-align:center;padding:90px 40px 70px;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(255,255,255,0.05) 0%,transparent 60%);pointer-events:none}
+
+/* HERO */
+.hero{background:var(--red);color:#fff;text-align:center;padding:90px 40px 70px;position:relative;overflow:hidden}
 .hero-badge{display:inline-block;background:rgba(255,255,255,0.2);color:#fff;font-size:13px;padding:6px 16px;border-radius:20px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.3)}
-.hero h1{font-size:52px;font-weight:800;margin-bottom:16px;line-height:1.1;text-shadow:0 2px 10px rgba(0,0,0,0.2)}
+.hero h1{font-size:52px;font-weight:800;margin-bottom:16px;line-height:1.1}
 .hero h1 span{color:var(--gold)}
 .hero p{font-size:18px;opacity:0.9;margin-bottom:40px;max-width:560px;margin-left:auto;margin-right:auto;line-height:1.6}
 .hero-btns{display:flex;justify-content:center;gap:16px;margin-bottom:60px;flex-wrap:wrap}
@@ -35,10 +36,14 @@ nav{background:var(--red);padding:16px 40px;display:flex;justify-content:space-b
 .stat-item{text-align:center}
 .stat-item h2{font-size:42px;font-weight:800;color:var(--gold);line-height:1}
 .stat-item p{font-size:13px;opacity:0.85;margin-top:4px}
+
+/* SECTIONS */
 .section{padding:70px 40px;text-align:center}
 .section.grey{background:var(--grey)}
 .section-title{font-size:32px;font-weight:700;color:var(--red);margin-bottom:12px}
 .section-sub{font-size:16px;color:#666;margin-bottom:50px}
+
+/* STEPS */
 .steps{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap}
 .step{background:#fff;border-radius:16px;padding:30px 20px;width:200px;border-top:4px solid var(--red);box-shadow:0 4px 20px rgba(0,0,0,0.08);transition:transform 0.3s}
 .step:hover{transform:translateY(-8px)}
@@ -46,12 +51,16 @@ nav{background:var(--red);padding:16px 40px;display:flex;justify-content:space-b
 .step h3{color:var(--red);font-size:16px;font-weight:700;margin-bottom:8px}
 .step p{font-size:13px;color:#666;line-height:1.5}
 .arrow{font-size:28px;color:var(--red)}
+
+/* BLOOD TYPES */
 .blood-section{background:var(--dark);padding:70px 40px;text-align:center}
 .blood-section .section-title{color:#fff}
 .blood-section .section-sub{color:rgba(255,255,255,0.6)}
 .blood-grid{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
 .blood-circle{width:90px;height:90px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 20px rgba(204,0,0,0.4)}
 .blood-circle:hover{transform:scale(1.15);background:#ff2222;box-shadow:0 8px 30px rgba(204,0,0,0.6)}
+
+/* HOSPITALS */
 .hospitals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:1100px;margin:0 auto}
 .hosp-card{background:#fff;border-radius:16px;padding:24px;text-align:left;box-shadow:0 4px 20px rgba(0,0,0,0.07);transition:all 0.3s;border-left:4px solid var(--red)}
 .hosp-card:hover{transform:translateY(-5px);box-shadow:0 12px 40px rgba(0,0,0,0.12)}
@@ -61,40 +70,82 @@ nav{background:var(--red);padding:16px 40px;display:flex;justify-content:space-b
 .hosp-type{display:inline-block;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin-top:10px}
 .govt{background:#e8f5e9;color:#2e7d32}
 .pvt{background:#fff0f0;color:var(--red)}
+
+/* FEATURES */
 .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;max-width:1000px;margin:0 auto}
 .feat-card{background:#fff;border-radius:16px;padding:28px;text-align:left;box-shadow:0 4px 20px rgba(0,0,0,0.07);transition:all 0.3s}
 .feat-card:hover{transform:translateY(-5px)}
 .feat-icon{font-size:36px;margin-bottom:16px}
 .feat-card h3{font-size:17px;font-weight:700;color:#222;margin-bottom:10px}
 .feat-card p{font-size:14px;color:#666;line-height:1.6}
-.emergency{background:linear-gradient(135deg,var(--dark) 0%,#2d2d2d 100%);color:#fff;text-align:center;padding:80px 40px}
+
+/* PUB/SUB ARCHITECTURE SECTION */
+.pubsub-section{background:#0d1117;padding:70px 40px;text-align:center}
+.pubsub-section .section-title{color:#fff}
+.pubsub-section .section-sub{color:rgba(255,255,255,0.5);margin-bottom:40px}
+.arch-flow{display:flex;justify-content:center;align-items:stretch;gap:0;flex-wrap:wrap;max-width:1000px;margin:0 auto 48px}
+.arch-node{background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px 16px;min-width:140px;flex:1;max-width:180px;text-align:center;position:relative}
+.arch-node .arch-icon{font-size:28px;margin-bottom:8px}
+.arch-node h4{color:#fff;font-size:13px;font-weight:700;margin-bottom:4px}
+.arch-node p{color:rgba(255,255,255,0.45);font-size:11px;line-height:1.4}
+.arch-node.highlight{border-color:var(--red);background:#1a0a0a}
+.arch-node.highlight h4{color:#ff4444}
+.arch-arrow{display:flex;align-items:center;padding:0 6px;color:rgba(255,255,255,0.3);font-size:20px;align-self:center}
+.sub-split{display:flex;justify-content:center;gap:24px;max-width:700px;margin:0 auto}
+.sub-card{background:#161b22;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px 24px;flex:1;text-align:left}
+.sub-card h4{color:#fff;font-size:13px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.sub-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700}
+.sub-badge.push{background:rgba(99,185,44,0.2);color:#63b92c}
+.sub-badge.pull{background:rgba(52,152,219,0.2);color:#3498db}
+.sub-card p{color:rgba(255,255,255,0.45);font-size:12px;line-height:1.6}
+.sub-card code{display:block;margin-top:8px;background:#0d1117;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px 10px;font-family:'Courier New',monospace;font-size:11px;color:#ff9955;line-height:1.5}
+
+/* LIVE ALERT FEED */
+.alert-feed{background:#0d1117;padding:0 40px 60px;text-align:center}
+.alert-feed-inner{max-width:700px;margin:0 auto;text-align:left}
+.alert-feed-title{color:rgba(255,255,255,0.6);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.alert-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:10px;background:#161b22;border:1px solid rgba(255,255,255,0.06);margin-bottom:8px;animation:slideIn 0.4s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.alert-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.alert-dot.match{background:#63b92c;box-shadow:0 0 6px #63b92c}
+.alert-dot.nomatch{background:#ff4444;box-shadow:0 0 6px #ff4444}
+.alert-dot.pending{background:#f59e0b;box-shadow:0 0 6px #f59e0b}
+.alert-text{color:rgba(255,255,255,0.75);font-size:13px;line-height:1.5}
+.alert-text strong{color:#fff}
+.alert-time{color:rgba(255,255,255,0.3);font-size:11px;margin-left:auto;white-space:nowrap;padding-top:3px}
+
+/* MAP */
+.map-section{padding:0;background:#fff}
+.map-header{text-align:center;padding:40px 40px 20px;background:#fff}
+#map{width:100%;height:450px}
+
+/* EMERGENCY */
+.emergency{background:var(--dark);color:#fff;text-align:center;padding:80px 40px}
 .emergency h2{font-size:36px;font-weight:800;margin-bottom:16px}
 .emergency p{font-size:17px;opacity:0.7;margin-bottom:36px}
 .emergency-btn{background:var(--red);color:#fff;padding:18px 50px;border-radius:30px;text-decoration:none;font-weight:700;font-size:18px;display:inline-block;animation:pulse 2s infinite;transition:all 0.3s}
 .emergency-btn:hover{background:#ff2222;transform:translateY(-3px)}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(204,0,0,0.7)}70%{box-shadow:0 0 0 20px rgba(204,0,0,0)}100%{box-shadow:0 0 0 0 rgba(204,0,0,0)}}
+
 footer{background:var(--red);color:#fff;text-align:center;padding:30px;font-size:14px}
 footer p{margin:5px 0;opacity:0.9}
-.map-section{padding:0;background:#fff}
-#map{width:100%;height:450px}
 </style>
 </head>
 <body>
 
+<!-- NAV -->
 <nav>
   <a href="/" class="logo">
     <span class="logo-icon">🩸</span>
     BloodBank Goa
   </a>
   <div class="nav-links">
-    <a href="/donor" class="nav-btn">Donor Portal</a>
+    <a href="/donor"    class="nav-btn">Donor Portal</a>
     <a href="/hospital" class="nav-btn">Hospital Portal</a>
-    <a href="/admin" class="nav-btn">Admin</a>
+    <a href="/admin"    class="nav-btn">Admin</a>
     {% if user %}
     <div class="user-info">
-      {% if user_pic %}
-      <img src="{{ user_pic }}" class="user-pic">
-      {% endif %}
+      {% if user_pic %}<img src="{{ user_pic }}" class="user-pic">{% endif %}
       <span class="user-name">{{ user }}</span>
       <a href="/logout" class="logout-btn">Logout</a>
     </div>
@@ -104,7 +155,7 @@ footer p{margin:5px 0;opacity:0.9}
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
       </svg>
       Sign in with Google
     </a>
@@ -112,12 +163,13 @@ footer p{margin:5px 0;opacity:0.9}
   </div>
 </nav>
 
+<!-- HERO -->
 <div class="hero">
   <div class="hero-badge">🩸 Powered by Google Cloud Platform</div>
   <h1>Saving Lives Across<br><span>Goa with Cloud</span></h1>
   <p>Connecting blood donors and hospitals across Goa in real time using Google Cloud Platform</p>
   <div class="hero-btns">
-    <a href="/donor" class="btn-primary">🩸 I am a Donor</a>
+    <a href="/donor"    class="btn-primary">🩸 I am a Donor</a>
     <a href="/hospital" class="btn-outline">🏥 I am a Hospital</a>
   </div>
   <div class="stats-bar">
@@ -136,6 +188,7 @@ footer p{margin:5px 0;opacity:0.9}
   </div>
 </div>
 
+<!-- HOW IT WORKS -->
 <div class="section grey">
   <div class="section-title">How It Works</div>
   <div class="section-sub">Simple 4-step process to save lives across Goa</div>
@@ -155,17 +208,18 @@ footer p{margin:5px 0;opacity:0.9}
     <div class="step">
       <div class="step-num">3</div>
       <h3>Match</h3>
-      <p>Cloud finds nearest compatible donor on Goa map</p>
+      <p>Cloud finds nearest compatible donor using hospital's real coordinates</p>
     </div>
     <div class="arrow">→</div>
     <div class="step">
       <div class="step-num">4</div>
-      <h3>Save</h3>
-      <p>Alert sent via Pub/Sub and blood reaches patient</p>
+      <h3>Alert</h3>
+      <p>Donor &amp; admin notified instantly via GCP Pub/Sub</p>
     </div>
   </div>
 </div>
 
+<!-- BLOOD TYPES -->
 <div class="blood-section">
   <div class="section-title">Blood Types We Support</div>
   <div class="section-sub">All 8 blood types covered across Goa</div>
@@ -181,105 +235,117 @@ footer p{margin:5px 0;opacity:0.9}
   </div>
 </div>
 
+<!-- HOSPITALS -->
 <div class="section">
   <div class="section-title">Hospitals in Goa</div>
   <div class="section-sub">8 major hospitals connected across Goa</div>
   <div class="hospitals-grid">
-    <div class="hosp-card">
-      <div class="hosp-icon">🏥</div>
-      <h3>Goa Medical College Hospital</h3>
-      <p>📍 Panaji, Goa</p>
-      <p>📞 0832-2458727</p>
-      <span class="hosp-type govt">Government</span>
-    </div>
-    <div class="hosp-card">
-      <div class="hosp-icon">🏥</div>
-      <h3>Apollo Victor Hospital</h3>
-      <p>📍 Margao, Goa</p>
-      <p>📞 0832-2721111</p>
-      <span class="hosp-type pvt">Private</span>
-    </div>
-    <div class="hosp-card">
-      <div class="hosp-icon">🏥</div>
-      <h3>Asilo Hospital</h3>
-      <p>📍 Mapusa, Goa</p>
-      <p>📞 0832-2262372</p>
-      <span class="hosp-type govt">Government</span>
-    </div>
-    <div class="hosp-card">
-      <div class="hosp-icon">🏥</div>
-      <h3>South Goa District Hospital</h3>
-      <p>📍 Margao, Goa</p>
-      <p>📞 0832-2705664</p>
-      <span class="hosp-type govt">Government</span>
-    </div>
-    <div class="hosp-card">
-      <div class="hosp-icon">🏥</div>
-      <h3>Salgaocar Medical Research</h3>
-      <p>📍 Vasco, Goa</p>
-      <p>📞 0832-2513333</p>
-      <span class="hosp-type pvt">Private</span>
-    </div>
-    <div class="hosp-card">
-      <div class="hosp-icon">🏥</div>
-      <h3>Manipal Hospital Goa</h3>
-      <p>📍 Panaji, Goa</p>
-      <p>📞 0832-2220000</p>
-      <span class="hosp-type pvt">Private</span>
-    </div>
-    <div class="hosp-card">
-      <div class="hosp-icon">🏥</div>
-      <h3>Hospicio Hospital</h3>
-      <p>📍 Margao, Goa</p>
-      <p>📞 0832-2705566</p>
-      <span class="hosp-type pvt">Private</span>
-    </div>
-    <div class="hosp-card">
-      <div class="hosp-icon">🏥</div>
-      <h3>ESI Hospital Margao</h3>
-      <p>📍 Margao, Goa</p>
-      <p>📞 0832-2705123</p>
-      <span class="hosp-type govt">Government</span>
-    </div>
+    <div class="hosp-card"><div class="hosp-icon">🏥</div><h3>Goa Medical College Hospital</h3><p>📍 Panaji, Goa</p><p>📞 0832-2458727</p><span class="hosp-type govt">Government</span></div>
+    <div class="hosp-card"><div class="hosp-icon">🏥</div><h3>Apollo Victor Hospital</h3><p>📍 Margao, Goa</p><p>📞 0832-2721111</p><span class="hosp-type pvt">Private</span></div>
+    <div class="hosp-card"><div class="hosp-icon">🏥</div><h3>Asilo Hospital</h3><p>📍 Mapusa, Goa</p><p>📞 0832-2262372</p><span class="hosp-type govt">Government</span></div>
+    <div class="hosp-card"><div class="hosp-icon">🏥</div><h3>South Goa District Hospital</h3><p>📍 Margao, Goa</p><p>📞 0832-2705664</p><span class="hosp-type govt">Government</span></div>
+    <div class="hosp-card"><div class="hosp-icon">🏥</div><h3>Salgaocar Medical Research</h3><p>📍 Vasco, Goa</p><p>📞 0832-2513333</p><span class="hosp-type pvt">Private</span></div>
+    <div class="hosp-card"><div class="hosp-icon">🏥</div><h3>Manipal Hospital Goa</h3><p>📍 Panaji, Goa</p><p>📞 0832-2220000</p><span class="hosp-type pvt">Private</span></div>
+    <div class="hosp-card"><div class="hosp-icon">🏥</div><h3>Hospicio Hospital</h3><p>📍 Margao, Goa</p><p>📞 0832-2705566</p><span class="hosp-type pvt">Private</span></div>
+    <div class="hosp-card"><div class="hosp-icon">🏥</div><h3>ESI Hospital Margao</h3><p>📍 Margao, Goa</p><p>📞 0832-2705123</p><span class="hosp-type govt">Government</span></div>
   </div>
 </div>
 
+<!-- FEATURES -->
 <div class="section grey">
   <div class="section-title">Why Choose BloodBank Goa</div>
   <div class="section-sub">Built on Google Cloud Platform for maximum reliability</div>
   <div class="features-grid">
-    <div class="feat-card">
-      <div class="feat-icon">⚡</div>
-      <h3>Real-time Matching</h3>
-      <p>Find nearest compatible donor across Goa in seconds using Google Maps API and Haversine algorithm</p>
+    <div class="feat-card"><div class="feat-icon">⚡</div><h3>Smart Matching</h3><p>Finds the nearest compatible donor using the hospital's exact coordinates and blood-type compatibility rules — not just an exact type match.</p></div>
+    <div class="feat-card"><div class="feat-icon">🔔</div><h3>Pub/Sub Alerts</h3><p>Every match publishes to a GCP Pub/Sub topic. Subscribers send SMS/email to the donor and ping the admin dashboard simultaneously.</p></div>
+    <div class="feat-card"><div class="feat-icon">🔒</div><h3>Secure Login</h3><p>Google OAuth 2.0 authentication keeps your medical data safe and private.</p></div>
+    <div class="feat-card"><div class="feat-icon">☁️</div><h3>Cloud Powered</h3><p>Built on GCP with Cloud SQL MySQL, Cloud Run, and Pub/Sub for reliable, scalable, always-on operation.</p></div>
+  </div>
+</div>
+
+<!-- PUB/SUB ARCHITECTURE -->
+<div class="pubsub-section">
+  <div class="section-title" style="color:#fff">Pub/Sub Alert Architecture</div>
+  <div class="section-sub">How a blood request triggers real-time notifications across Goa</div>
+
+  <div class="arch-flow">
+    <div class="arch-node">
+      <div class="arch-icon">🏥</div>
+      <h4>Hospital</h4>
+      <p>Submits request via portal</p>
     </div>
-    <div class="feat-card">
-      <div class="feat-icon">🔔</div>
-      <h3>Instant Alerts</h3>
-      <p>Emergency notifications via Google Cloud Pub/Sub to donors and hospitals instantly</p>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">
+      <div class="arch-icon">🐍</div>
+      <h4>Flask route</h4>
+      <p>Matches nearest donor</p>
     </div>
-    <div class="feat-card">
-      <div class="feat-icon">🔒</div>
-      <h3>Secure Login</h3>
-      <p>Google OAuth 2.0 authentication keeps your medical data safe and private</p>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node highlight">
+      <div class="arch-icon">📡</div>
+      <h4>Pub/Sub topic</h4>
+      <p>blood-request-alerts</p>
     </div>
-    <div class="feat-card">
-      <div class="feat-icon">☁️</div>
-      <h3>Cloud Powered</h3>
-      <p>Built on GCP with Cloud SQL MySQL for reliable, scalable and always-on storage</p>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">
+      <div class="arch-icon">📨</div>
+      <h4>Subscribers</h4>
+      <p>Push or pull delivery</p>
+    </div>
+  </div>
+
+  <div class="sub-split">
+    <div class="sub-card">
+      <h4>
+        Donor notification
+        <span class="sub-badge push">Push</span>
+      </h4>
+      <p>GCP calls <strong style="color:#fff">/pubsub/push</strong> on your Cloud Run service. Your handler reads the message and sends an SMS/email to the matched donor.</p>
+      <code>POST /pubsub/push
+{
+  "event": "BLOOD_REQUEST_MATCHED",
+  "donor_name": "Rahul Naik",
+  "donor_phone": "94221xxxxx",
+  "hospital_name": "GMC Panaji",
+  "blood_type": "O+",
+  "distance_km": 3.2
+}</code>
+    </div>
+    <div class="sub-card">
+      <h4>
+        Admin dashboard
+        <span class="sub-badge pull">Push</span>
+      </h4>
+      <p>A second subscription delivers every event to the admin panel endpoint, updating request status in real time without polling the database.</p>
+      <code>POST /pubsub/push
+{
+  "event": "BLOOD_REQUEST_NO_MATCH",
+  "hospital_name": "Asilo Mapusa",
+  "blood_type": "AB-",
+  "urgency": "CRITICAL"
+}</code>
     </div>
   </div>
 </div>
 
-<!-- MAP SECTION -->
+<!-- LIVE ALERT FEED (cosmetic demo) -->
+<div class="alert-feed">
+  <div class="alert-feed-inner">
+    <div class="alert-feed-title">🟢 Live alert feed</div>
+    <div id="feed"></div>
+  </div>
+</div>
+
+<!-- MAP -->
 <div class="map-section">
-  <div style="text-align:center;padding:40px 40px 20px;background:#fff">
-    <div class="section-title">🗺️ Donors & Hospitals Across Goa</div>
+  <div class="map-header">
+    <div class="section-title">🗺️ Donors &amp; Hospitals Across Goa</div>
     <div class="section-sub">Live map showing all registered donors and hospitals in Goa</div>
   </div>
   <div id="map"></div>
 </div>
 
+<!-- EMERGENCY CTA -->
 <div class="emergency">
   <h2>🚨 Emergency in Goa?</h2>
   <p>Need blood urgently at any Goa hospital? Submit a request now and we find the nearest match instantly!</p>
@@ -288,24 +354,20 @@ footer p{margin:5px 0;opacity:0.9}
 
 <footer>
   <p>🩸 BloodBank Goa — Powered by Google Cloud Platform</p>
-  <p>Serving all hospitals across Goa ❤️ | Built with Flask, Cloud SQL, Pub/Sub & Maps API</p>
+  <p>Serving all hospitals across Goa ❤️ | Flask · Cloud SQL · Pub/Sub · Cloud Run · Maps API</p>
 </footer>
 
+<!-- GOOGLE MAPS -->
 <script>
 function initMap() {
-  // Center on Goa
   const goaCenter = { lat: 15.2993, lng: 74.1240 };
-
   const map = new google.maps.Map(document.getElementById("map"), {
     zoom: 10,
     center: goaCenter,
     mapTypeId: "roadmap",
-    styles: [
-      { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }
-    ]
+    styles: [{ featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }]
   });
 
-  // Hospital locations
   const hospitals = [
     { name: "Goa Medical College Hospital", lat: 15.4569, lng: 73.8092, type: "govt" },
     { name: "Apollo Victor Hospital",        lat: 15.2721, lng: 73.9956, type: "pvt"  },
@@ -317,7 +379,6 @@ function initMap() {
     { name: "ESI Hospital Margao",           lat: 15.2795, lng: 73.9920, type: "govt" }
   ];
 
-  // Donor city locations (from your city_coords in app.py)
   const donorCities = [
     { name: "Panaji",    lat: 15.4909, lng: 73.8278 },
     { name: "Margao",    lat: 15.2832, lng: 73.9862 },
@@ -333,11 +394,10 @@ function initMap() {
 
   const infoWindow = new google.maps.InfoWindow();
 
-  // Hospital markers — red cross icon
   hospitals.forEach(h => {
     const marker = new google.maps.Marker({
       position: { lat: h.lat, lng: h.lng },
-      map: map,
+      map,
       title: h.name,
       icon: {
         path: google.maps.SymbolPath.CIRCLE,
@@ -360,11 +420,10 @@ function initMap() {
     });
   });
 
-  // Donor city markers — blood drop style
   donorCities.forEach(c => {
     const marker = new google.maps.Marker({
       position: { lat: c.lat, lng: c.lng },
-      map: map,
+      map,
       title: c.name + " — Donor Zone",
       icon: {
         path: google.maps.SymbolPath.CIRCLE,
@@ -386,11 +445,10 @@ function initMap() {
     });
   });
 
-  // Legend
   const legend = document.createElement("div");
   legend.style = "background:#fff;padding:12px 16px;margin:10px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.2);font-family:Segoe UI,sans-serif;font-size:13px;line-height:2";
   legend.innerHTML = `
-    <strong style="font-size:13px">Map Legend</strong><br>
+    <strong>Map Legend</strong><br>
     <span style="color:#2e7d32">●</span> Government Hospital<br>
     <span style="color:#CC0000">●</span> Private Hospital<br>
     <span style="color:#FF4444">●</span> Donor Zone
@@ -398,9 +456,35 @@ function initMap() {
   map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
 }
 </script>
-<script async defer
-  src="https://maps.googleapis.com/maps/api/js?key={{ maps_key }}&callback=initMap">
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ maps_key }}&callback=initMap"></script>
+
+<!-- LIVE ALERT FEED (simulated demo ticker) -->
+<script>
+const DEMO_ALERTS = [
+  { type: "match",   text: "<strong>Match found</strong> — Rahul Naik (O+) dispatched to GMC Panaji · 2.1 km", time: "just now" },
+  { type: "match",   text: "<strong>Match found</strong> — Priya Dessai (A+) dispatched to Asilo Mapusa · 0.8 km", time: "1 min ago" },
+  { type: "nomatch", text: "<strong>No match</strong> for AB- · Hospicio Margao · admin alerted via Pub/Sub", time: "3 min ago" },
+  { type: "pending", text: "<strong>Request pending</strong> — B+ needed at Salgaocar Vasco · searching donors…", time: "5 min ago" },
+  { type: "match",   text: "<strong>Match found</strong> — Vijay Gawas (O-) dispatched to South Goa District Hospital · 4.5 km", time: "8 min ago" },
+];
+
+function renderFeed() {
+  const feed = document.getElementById("feed");
+  feed.innerHTML = "";
+  DEMO_ALERTS.forEach((a, i) => {
+    const div = document.createElement("div");
+    div.className = "alert-item";
+    div.style.animationDelay = (i * 0.08) + "s";
+    div.innerHTML = `
+      <span class="alert-dot ${a.type}"></span>
+      <span class="alert-text">${a.text}</span>
+      <span class="alert-time">${a.time}</span>
+    `;
+    feed.appendChild(div);
+  });
+}
+renderFeed();
 </script>
+
 </body>
 </html>
-
