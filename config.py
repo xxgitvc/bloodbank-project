@@ -1,6 +1,6 @@
 import os
 
-MYSQL_HOST = os.environ.get("MYSQL_HOST")
+MYSQL_HOST = blood-bank-project-492616:us-central1:bloodbank-db
 MYSQL_USER = os.environ.get("MYSQL_USER")
 MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD")
 MYSQL_DATABASE = os.environ.get("MYSQL_DATABASE")
