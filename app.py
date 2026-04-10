@@ -39,7 +39,7 @@ def publish_alert(payload: dict):
 # ── DATABASE ────────────────────────────────────────────────────────────────
 def get_db():
     return mysql.connector.connect(
-        unix_socket=MYSQL_SOCKET,
+        host=MYSQL_HOST,
         user=MYSQL_USER,
         password=MYSQL_PASSWORD,
         database=MYSQL_DATABASE
