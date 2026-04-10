@@ -55,6 +55,7 @@ def init_db_pool():
                 user=MYSQL_USER,
                 password=MYSQL_PASSWORD,
                 database=MYSQL_DATABASE,
+                auth_plugin="mysql_native_password",
             )
 
             # Unix socket path (Cloud Run + Cloud SQL)
