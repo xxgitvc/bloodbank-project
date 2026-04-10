@@ -41,19 +41,36 @@ def publish_alert(payload: dict):
 
 # ── DATABASE connection pool ─────────────────────────────────────────────────
 # Pool is created ONCE at startup; get_db() checks out a connection from it.
-db_pool = mysql.connector.pooling.MySQLConnectionPool(
-    pool_name="bloodbank_pool",
-    pool_size=5,
-    host=MYSQL_HOST,
-    user=MYSQL_USER,
-    password=MYSQL_PASSWORD,
-    database=MYSQL_DATABASE,
-)
+db_pool = None
+
+def init_db_pool():
+    global db_pool
+    if db_pool is None:
+        try:
+            db_pool = mysql.connector.pooling.MySQLConnectionPool(
+                pool_name="bloodbank_pool",
+                pool_size=5,
+                host=MYSQL_HOST,
+                user=MYSQL_USER,
+                password=MYSQL_PASSWORD,
+                database=MYSQL_DATABASE,
+            )
+            print("✅ DB pool initialized")
+        except Exception as e:
+            print(f"❌ DB pool init failed: {e}")
 
 
 def get_db():
-    """Return a pooled connection. Usage is identical to before."""
-    return db_pool.get_connection()
+    global db_pool
+
+    if db_pool is None:
+        init_db_pool()
+
+    try:
+        return db_pool.get_connection()
+    except Exception as e:
+        print(f"❌ DB connection failed: {e}")
+        raise
 
 
 # ── MATCHING LOGIC ───────────────────────────────────────────────────────────
