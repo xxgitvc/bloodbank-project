@@ -564,7 +564,10 @@ def cancel_request(request_id):
 # ── RUN ────────────────────────────────────────────────────────────────────────
 # Initialise DB pool at startup so connection issues surface immediately in logs
 with app.app_context():
-    init_db_pool()
+    try:
+        init_db_pool()
+    except Exception as e:
+        print(f"⚠️ Startup DB init failed, will retry on first request: {e}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
