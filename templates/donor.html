@@ -220,6 +220,18 @@ function showTab(name, btn) {
   document.getElementById(name).classList.add('active');
   btn.classList.add('active');
 }
+
+window.addEventListener("load", function() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("success") == "1") {
+        const msg = document.getElementById("success");
+        msg.style.display = "block";
+
+        setTimeout(() => {
+            msg.style.display = "none";
+        }, 3000);
+    }
+});  
 </script>
 </body>
 </html>
