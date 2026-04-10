@@ -79,6 +79,27 @@ nav{background:var(--red);padding:16px 40px;display:flex;justify-content:space-b
 .feat-card h3{font-size:17px;font-weight:700;color:#222;margin-bottom:10px}
 .feat-card p{font-size:14px;color:#666;line-height:1.6}
 
+/* PUB/SUB ARCHITECTURE SECTION */
+.pubsub-section{background:#0d1117;padding:70px 40px;text-align:center}
+.pubsub-section .section-title{color:#fff}
+.pubsub-section .section-sub{color:rgba(255,255,255,0.5);margin-bottom:40px}
+.arch-flow{display:flex;justify-content:center;align-items:stretch;gap:0;flex-wrap:wrap;max-width:1000px;margin:0 auto 48px}
+.arch-node{background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px 16px;min-width:140px;flex:1;max-width:180px;text-align:center;position:relative}
+.arch-node .arch-icon{font-size:28px;margin-bottom:8px}
+.arch-node h4{color:#fff;font-size:13px;font-weight:700;margin-bottom:4px}
+.arch-node p{color:rgba(255,255,255,0.45);font-size:11px;line-height:1.4}
+.arch-node.highlight{border-color:var(--red);background:#1a0a0a}
+.arch-node.highlight h4{color:#ff4444}
+.arch-arrow{display:flex;align-items:center;padding:0 6px;color:rgba(255,255,255,0.3);font-size:20px;align-self:center}
+.sub-split{display:flex;justify-content:center;gap:24px;max-width:700px;margin:0 auto}
+.sub-card{background:#161b22;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px 24px;flex:1;text-align:left}
+.sub-card h4{color:#fff;font-size:13px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.sub-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700}
+.sub-badge.push{background:rgba(99,185,44,0.2);color:#63b92c}
+.sub-badge.pull{background:rgba(52,152,219,0.2);color:#3498db}
+.sub-card p{color:rgba(255,255,255,0.45);font-size:12px;line-height:1.6}
+.sub-card code{display:block;margin-top:8px;background:#0d1117;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px 10px;font-family:'Courier New',monospace;font-size:11px;color:#ff9955;line-height:1.5}
+
 /* LIVE ALERT FEED */
 .alert-feed{background:#0d1117;padding:0 40px 60px;text-align:center}
 .alert-feed-inner{max-width:700px;margin:0 auto;text-align:left}
@@ -240,88 +261,6 @@ footer p{margin:5px 0;opacity:0.9}
     <div class="feat-card"><div class="feat-icon">🔒</div><h3>Secure Login</h3><p>Google OAuth 2.0 authentication keeps your medical data safe and private.</p></div>
     <div class="feat-card"><div class="feat-icon">☁️</div><h3>Cloud Powered</h3><p>Built on GCP with Cloud SQL MySQL, Cloud Run, and Pub/Sub for reliable, scalable, always-on operation.</p></div>
   </div>
-</div>
-
-<!-- PUB/SUB ARCHITECTURE -->
-<div class="pubsub-section">
-  <div class="section-title" style="color:#fff">Pub/Sub Alert Architecture</div>
-  <div class="section-sub">How a blood request triggers real-time notifications across Goa</div>
-
-  <div class="arch-flow">
-    <div class="arch-node">
-      <div class="arch-icon">🏥</div>
-      <h4>Hospital</h4>
-      <p>Submits request via portal</p>
-    </div>
-    <div class="arch-arrow">→</div>
-    <div class="arch-node">
-      <div class="arch-icon">🐍</div>
-      <h4>Flask route</h4>
-      <p>Matches nearest donor</p>
-    </div>
-    <div class="arch-arrow">→</div>
-    <div class="arch-node highlight">
-      <div class="arch-icon">📡</div>
-      <h4>Pub/Sub topic</h4>
-      <p>blood-request-alerts</p>
-    </div>
-    <div class="arch-arrow">→</div>
-    <div class="arch-node">
-      <div class="arch-icon">📨</div>
-      <h4>Subscribers</h4>
-      <p>Push or pull delivery</p>
-    </div>
-  </div>
-
-  <div class="sub-split">
-    <div class="sub-card">
-      <h4>
-        Donor notification
-        <span class="sub-badge push">Push</span>
-      </h4>
-      <p>GCP calls <strong style="color:#fff">/pubsub/push</strong> on your Cloud Run service. Your handler reads the message and sends an SMS/email to the matched donor.</p>
-      <code>POST /pubsub/push
-{
-  "event": "BLOOD_REQUEST_MATCHED",
-  "donor_name": "Rahul Naik",
-  "donor_phone": "94221xxxxx",
-  "hospital_name": "GMC Panaji",
-  "blood_type": "O+",
-  "distance_km": 3.2
-}</code>
-    </div>
-    <div class="sub-card">
-      <h4>
-        Admin dashboard
-        <span class="sub-badge pull">Push</span>
-      </h4>
-      <p>A second subscription delivers every event to the admin panel endpoint, updating request status in real time without polling the database.</p>
-      <code>POST /pubsub/push
-{
-  "event": "BLOOD_REQUEST_NO_MATCH",
-  "hospital_name": "Asilo Mapusa",
-  "blood_type": "AB-",
-  "urgency": "CRITICAL"
-}</code>
-    </div>
-  </div>
-</div>
-
-<!-- LIVE ALERT FEED (cosmetic demo) -->
-<div class="alert-feed">
-  <div class="alert-feed-inner">
-    <div class="alert-feed-title">🟢 Live alert feed</div>
-    <div id="feed"></div>
-  </div>
-</div>
-
-<!-- MAP -->
-<div class="map-section">
-  <div class="map-header">
-    <div class="section-title">🗺️ Donors &amp; Hospitals Across Goa</div>
-    <div class="section-sub">Live map showing all registered donors and hospitals in Goa</div>
-  </div>
-  <div id="map"></div>
 </div>
 
 <!-- EMERGENCY CTA -->
