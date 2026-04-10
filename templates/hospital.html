@@ -244,24 +244,36 @@ footer p{margin:5px 0;opacity:0.9}
           </tr>
         </thead>
         <tbody>
-          {% for r in requests %}
-          <tr>
-            <td style="font-family:monospace;font-size:13px">{{ r.request_id }}</td>
-            <td>{{ r.hospital_name }}</td>
-            <td><span class="badge blood">{{ r.blood_type }}</span></td>
-            <td>{{ r.units_needed }}</td>
-            <td>
-              {% if r.urgency == 'CRITICAL' %}<span class="badge critical">🔴 Critical</span>
-              {% elif r.urgency == 'URGENT' %}<span class="badge urgent">🟠 Urgent</span>
-              {% else %}<span class="badge normal">🔵 Normal</span>{% endif %}
-            </td>
-            <td>
-              {% if r.status == 'PENDING' %}<span class="badge pending">Pending</span>
-              {% elif r.status == 'FULFILLED' %}<span class="badge fulfilled">Fulfilled</span>
-              {% else %}<span class="badge cancelled">Cancelled</span>{% endif %}
-            </td>
-          </tr>
-          {% endfor %}
+          {% if is_admin %}
+
+  {% for r in requests %}
+  <tr>
+    <td style="font-family:monospace;font-size:13px">{{ r.request_id }}</td>
+    <td>{{ r.hospital_name }}</td>
+    <td><span class="badge blood">{{ r.blood_type }}</span></td>
+    <td>{{ r.units_needed }}</td>
+    <td>
+      {% if r.urgency == 'CRITICAL' %}<span class="badge critical">🔴 Critical</span>
+      {% elif r.urgency == 'URGENT' %}<span class="badge urgent">🟠 Urgent</span>
+      {% else %}<span class="badge normal">🔵 Normal</span>{% endif %}
+    </td>
+    <td>
+      {% if r.status == 'PENDING' %}<span class="badge pending">Pending</span>
+      {% elif r.status == 'FULFILLED' %}<span class="badge fulfilled">Fulfilled</span>
+      {% else %}<span class="badge cancelled">Cancelled</span>{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+
+{% else %}
+
+  <tr>
+    <td colspan="6" style="text-align:center;color:#888;font-weight:600;padding:20px;">
+      🔒 Only admin can view blood requests
+    </td>
+  </tr>
+
+{% endif %}
         </tbody>
       </table>
     </div>
