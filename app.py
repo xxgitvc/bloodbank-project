@@ -176,16 +176,34 @@ def logout():
 
 
 # ================= DONOR =================
+
 @app.route('/donor')
 def donor():
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM donors ORDER BY created_at DESC")
-    donors = cursor.fetchall()
+    # ✅ Admin emails
+    ADMIN_EMAILS = [
+        "msci.2323@unigoa.ac.in",
+        "msci.2312@unigoa.ac.in"
+    ]
 
-    donor_count = len(donors)
-    available_count = sum(1 for d in donors if d['is_available'])
+    user_email = session.get('user_email')
+    is_admin = user_email in ADMIN_EMAILS
+
+    # ✅ Only admin can see donor data
+    if is_admin:
+        cursor.execute("SELECT * FROM donors ORDER BY created_at DESC")
+        donors = cursor.fetchall()
+    else:
+        donors = []
+
+    # ✅ Counts (for UI stats)
+    cursor.execute("SELECT COUNT(*) as total FROM donors")
+    donor_count = cursor.fetchone()['total']
+
+    cursor.execute("SELECT COUNT(*) as total FROM donors WHERE is_available = 1")
+    available_count = cursor.fetchone()['total']
 
     cursor.close()
     db.close()
@@ -194,10 +212,13 @@ def donor():
         donors=donors,
         donor_count=donor_count,
         available_count=available_count,
+        is_admin=is_admin,
         user=session.get('user_name'),
-        user_pic=session.get('user_pic'))
+        user_pic=session.get('user_pic')
+    )
 
 
+# ================= DONOR REGISTER =================
 @app.route('/donor/register', methods=['POST'])
 def donor_register():
     db = get_db()
@@ -222,17 +243,22 @@ def donor_register():
          latitude, longitude, is_available, total_donations)
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,1,0)
     """,
-    (donor_id,
-     request.form['full_name'],
-     request.form['email'],
-     request.form['blood_type'],
-     request.form['phone'],
-     city, lat, lng))
+    (
+        donor_id,
+        request.form['full_name'],
+        request.form['email'],
+        request.form['blood_type'],
+        request.form['phone'],
+        city,
+        lat,
+        lng
+    ))
 
     db.commit()
     cursor.close()
     db.close()
 
+    # ✅ success popup trigger
     return redirect(url_for('donor', success=1))
 
 
