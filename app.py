@@ -233,7 +233,7 @@ def donor_register():
     cursor.close()
     db.close()
 
-    return redirect(url_for('donor'))
+    return redirect(url_for('donor', success=1))
 
 
 # ================= HOSPITAL REQUEST (UPDATED WITH MATCHING) =================
