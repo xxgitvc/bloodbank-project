@@ -24,12 +24,14 @@ GOOGLE_USER_URL  = "https://www.googleapis.com/oauth2/v2/userinfo"
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "your-gcp-project-id")
 PUBSUB_TOPIC   = "blood-request-alerts"
 
+# Initialize ONCE at startup, not per-request
+publisher  = pubsub_v1.PublisherClient()
+topic_path = publisher.topic_path(GCP_PROJECT_ID, PUBSUB_TOPIC)
+
 def publish_alert(payload: dict):
     """Publish a blood-request alert to GCP Pub/Sub."""
     try:
-        publisher = pubsub_v1.PublisherClient()
-        topic_path = publisher.topic_path(GCP_PROJECT_ID, PUBSUB_TOPIC)
-        data = json.dumps(payload).encode("utf-8")
+        data   = json.dumps(payload).encode("utf-8")
         future = publisher.publish(topic_path, data)
         print(f"✅ Pub/Sub message published: {future.result()}")
     except Exception as e:
