@@ -4,9 +4,9 @@ import uuid
 import os
 import math
 import json
-import requests as http_requests
-import smtplib
 import base64
+import smtplib
+import requests as http_requests
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from config import *
@@ -24,20 +24,31 @@ GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USER_URL  = "https://www.googleapis.com/oauth2/v2/userinfo"
 
-# ── Pub/Sub config ──────────────────────────────────────────────────────────
+# ── Pub/Sub config ────────────────────────────────────────────────────────────
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "your-gcp-project-id")
 PUBSUB_TOPIC   = "blood-request-alerts"
 
-# ── Email config ─────────────────────────────────────────────────────────────
-GMAIL_SENDER       = os.environ.get("GMAIL_SENDER", "msci.2323@unigoa.ac.in")
+# ── Email config ──────────────────────────────────────────────────────────────
+GMAIL_SENDER       = os.environ.get("GMAIL_SENDER", "")
 GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
-ADMIN_ALERT_EMAIL  = os.environ.get("ALERT_EMAIL", "msci.2323@unigoa.ac.in")
+ALERT_EMAIL        = os.environ.get("ALERT_EMAIL", "msci.2323@unigoa.ac.in")
+
+# ── Debug: print env vars on startup ─────────────────────────────────────────
+print(f"🔧 GCP_PROJECT_ID     : {os.environ.get('GCP_PROJECT_ID', 'NOT SET')}")
+print(f"🔧 GMAIL_SENDER       : {os.environ.get('GMAIL_SENDER', 'NOT SET')}")
+print(f"🔧 GMAIL_APP_PASSWORD : {'SET ✅' if os.environ.get('GMAIL_APP_PASSWORD') else 'NOT SET ❌'}")
+print(f"🔧 ALERT_EMAIL        : {os.environ.get('ALERT_EMAIL', 'NOT SET')}")
 
 
-# ── GMAIL SMTP ───────────────────────────────────────────────────────────────
+# ── GMAIL SMTP ────────────────────────────────────────────────────────────────
 def send_gmail(subject, body, to_email):
     """Send email via Gmail SMTP using App Password."""
     try:
+        print(f"📧 Attempting to send email...")
+        print(f"📧 From    : {GMAIL_SENDER}")
+        print(f"📧 To      : {to_email}")
+        print(f"📧 Subject : {subject}")
+
         msg = MIMEMultipart()
         msg["From"]    = GMAIL_SENDER
         msg["To"]      = to_email
@@ -48,13 +59,21 @@ def send_gmail(subject, body, to_email):
             server.login(GMAIL_SENDER, GMAIL_APP_PASSWORD)
             server.sendmail(GMAIL_SENDER, to_email, msg.as_string())
 
-        print(f"✅ Email sent to {to_email}")
+        print(f"✅ Email sent successfully to {to_email}")
+
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"❌ Email auth failed (check app password): {e}")
+    except smtplib.SMTPException as e:
+        print(f"❌ SMTP error: {e}")
     except Exception as e:
-        print(f"❌ Email failed: {e}")
+        print(f"❌ Email failed (unexpected error): {e}")
 
 
 def send_matched_email(data):
-    subject = f"🚨 Blood Request [{data['urgency']}] - {data['blood_type']} needed at {data['hospital_name']}"
+    subject = (
+        f"🚨 Blood Request [{data['urgency']}] - "
+        f"{data['blood_type']} needed at {data['hospital_name']}"
+    )
     body = f"""
 🩸 BLOOD REQUEST MATCHED — BloodBank Goa
 ==========================================
@@ -78,11 +97,14 @@ Distance     : {data['distance_km']} km from hospital
 --
 BloodBank Goa — Powered by Google Cloud Platform
     """
-    send_gmail(subject, body, ADMIN_ALERT_EMAIL)
+    send_gmail(subject, body, ALERT_EMAIL)
 
 
 def send_no_match_email(data):
-    subject = f"⚠️ No Donor Found - {data['blood_type']} at {data['hospital_name']}"
+    subject = (
+        f"⚠️ No Donor Found - "
+        f"{data['blood_type']} at {data['hospital_name']}"
+    )
     body = f"""
 ❌ NO DONOR MATCH FOUND — BloodBank Goa
 ==========================================
@@ -100,23 +122,23 @@ consider reaching out to nearby blood banks.
 --
 BloodBank Goa — Powered by Google Cloud Platform
     """
-    send_gmail(subject, body, ADMIN_ALERT_EMAIL)
+    send_gmail(subject, body, ALERT_EMAIL)
 
 
-# ── Pub/Sub PUBLISH ──────────────────────────────────────────────────────────
+# ── Pub/Sub PUBLISH ───────────────────────────────────────────────────────────
 def publish_alert(payload: dict):
     """Publish a blood-request alert to GCP Pub/Sub."""
     try:
-        publisher = pubsub_v1.PublisherClient()
+        publisher  = pubsub_v1.PublisherClient()
         topic_path = publisher.topic_path(GCP_PROJECT_ID, PUBSUB_TOPIC)
-        data = json.dumps(payload).encode("utf-8")
-        future = publisher.publish(topic_path, data)
+        data       = json.dumps(payload).encode("utf-8")
+        future     = publisher.publish(topic_path, data)
         print(f"✅ Pub/Sub message published: {future.result()}")
     except Exception as e:
         print(f"❌ Pub/Sub publish failed: {e}")
 
 
-# ── DATABASE ─────────────────────────────────────────────────────────────────
+# ── DATABASE ──────────────────────────────────────────────────────────────────
 def get_db():
     return mysql.connector.connect(
         host=MYSQL_HOST,
@@ -173,7 +195,7 @@ def find_nearest_donor(blood_type, hospital_lat, hospital_lon):
     return nearest, round(min_dist * 111, 2)
 
 
-# ── MAP SUPPORT ──────────────────────────────────────────────────────────────
+# ── MAP SUPPORT ───────────────────────────────────────────────────────────────
 def get_all_donors():
     db = get_db()
     cursor = db.cursor(dictionary=True)
@@ -454,16 +476,7 @@ def hospital_request():
             "donor_city":    nearest["city"],
             "distance_km":   dist_km,
         }
-
-        # 4. Publish to Pub/Sub
         publish_alert(payload)
-
-        # 5. Uncomment to mark donor unavailable after matching:
-        # cursor.execute(
-        #     "UPDATE donors SET is_available = 0 WHERE donor_id = %s",
-        #     (nearest["donor_id"],)
-        # )
-        # db.commit()
 
     else:
         print(f"❌ NO MATCH found for blood type {blood_type} near {h_name}")
@@ -490,32 +503,42 @@ def pubsub_push():
     """
     GCP Pub/Sub push subscription calls this endpoint whenever a message
     is published to the blood-request-alerts topic.
-
-    Configure in GCP Console:
-      Pub/Sub → Subscriptions → Create subscription
-        Delivery type : Push
-        Endpoint URL  : https://<your-cloud-run-url>/pubsub/push
     """
+    print("📨 pubsub_push endpoint called")
+
     envelope = request.get_json(silent=True)
-    if not envelope or "message" not in envelope:
+    print(f"📨 envelope received: {envelope}")
+
+    if not envelope:
+        print("❌ No envelope / empty body received")
         return "Bad Request", 400
 
-    raw   = envelope["message"].get("data", "")
-    data  = json.loads(base64.b64decode(raw).decode("utf-8"))
-    event = data.get("event")
+    if "message" not in envelope:
+        print(f"❌ No 'message' key. Keys found: {list(envelope.keys())}")
+        return "Bad Request", 400
 
-    print(f"📨 Pub/Sub push received: {event}")
+    raw = envelope["message"].get("data", "")
+    print(f"📨 raw base64 data: {raw}")
+
+    try:
+        data  = json.loads(base64.b64decode(raw).decode("utf-8"))
+        event = data.get("event")
+        print(f"📨 Decoded event  : {event}")
+        print(f"📨 Full payload   : {data}")
+    except Exception as e:
+        print(f"❌ Failed to decode message: {e}")
+        return "Bad Request", 400
 
     if event == "BLOOD_REQUEST_MATCHED":
-        print(
-            f"  → Donor {data['donor_name']} ({data['donor_phone']}) "
-            f"needed at {data['hospital_name']} for {data['blood_type']}"
-        )
+        print("📧 Sending MATCHED email alert...")
         send_matched_email(data)
 
     elif event == "BLOOD_REQUEST_NO_MATCH":
-        print(f"  → No match for {data['blood_type']} at {data['hospital_name']}")
+        print("📧 Sending NO MATCH email alert...")
         send_no_match_email(data)
+
+    else:
+        print(f"⚠️ Unknown event type: {event}")
 
     # Must return 2xx so Pub/Sub doesn't retry
     return "OK", 200
