@@ -38,6 +38,20 @@ print(f"🔧 GCP_PROJECT_ID     : {os.environ.get('GCP_PROJECT_ID', 'NOT SET')}"
 print(f"🔧 GMAIL_SENDER       : {os.environ.get('GMAIL_SENDER', 'NOT SET')}")
 print(f"🔧 GMAIL_APP_PASSWORD : {'SET ✅' if os.environ.get('GMAIL_APP_PASSWORD') else 'NOT SET ❌'}")
 print(f"🔧 ALERT_EMAIL        : {os.environ.get('ALERT_EMAIL', 'NOT SET')}")
+print(f"🔧 MYSQL_HOST         : {os.environ.get('MYSQL_HOST', 'NOT SET')}")
+print(f"🔧 MYSQL_DATABASE     : {os.environ.get('MYSQL_DATABASE', 'NOT SET')}")
+
+
+# ── DATABASE ──────────────────────────────────────────────────────────────────
+def get_db():
+    return mysql.connector.connect(
+        host=MYSQL_HOST,
+        port=3306,
+        user=MYSQL_USER,
+        password=MYSQL_PASSWORD,
+        database=MYSQL_DATABASE,
+        connection_timeout=10
+    )
 
 
 # ── GMAIL SMTP ────────────────────────────────────────────────────────────────
@@ -136,16 +150,6 @@ def publish_alert(payload: dict):
         print(f"✅ Pub/Sub message published: {future.result()}")
     except Exception as e:
         print(f"❌ Pub/Sub publish failed: {e}")
-
-
-# ── DATABASE ──────────────────────────────────────────────────────────────────
-def get_db():
-    return mysql.connector.connect(
-        host=MYSQL_HOST,
-        user=MYSQL_USER,
-        password=MYSQL_PASSWORD,
-        database=MYSQL_DATABASE
-    )
 
 
 # ── MATCHING LOGIC ────────────────────────────────────────────────────────────
