@@ -5,6 +5,10 @@ import os
 import math
 import json
 import requests as http_requests
+import smtplib
+import base64
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from config import *
 
 # GCP Pub/Sub
@@ -24,6 +28,82 @@ GOOGLE_USER_URL  = "https://www.googleapis.com/oauth2/v2/userinfo"
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "your-gcp-project-id")
 PUBSUB_TOPIC   = "blood-request-alerts"
 
+# ── Email config ─────────────────────────────────────────────────────────────
+GMAIL_SENDER       = os.environ.get("GMAIL_SENDER", "msci.2323@unigoa.ac.in")
+GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
+ADMIN_ALERT_EMAIL  = os.environ.get("ALERT_EMAIL", "msci.2323@unigoa.ac.in")
+
+
+# ── GMAIL SMTP ───────────────────────────────────────────────────────────────
+def send_gmail(subject, body, to_email):
+    """Send email via Gmail SMTP using App Password."""
+    try:
+        msg = MIMEMultipart()
+        msg["From"]    = GMAIL_SENDER
+        msg["To"]      = to_email
+        msg["Subject"] = subject
+        msg.attach(MIMEText(body, "plain"))
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(GMAIL_SENDER, GMAIL_APP_PASSWORD)
+            server.sendmail(GMAIL_SENDER, to_email, msg.as_string())
+
+        print(f"✅ Email sent to {to_email}")
+    except Exception as e:
+        print(f"❌ Email failed: {e}")
+
+
+def send_matched_email(data):
+    subject = f"🚨 Blood Request [{data['urgency']}] - {data['blood_type']} needed at {data['hospital_name']}"
+    body = f"""
+🩸 BLOOD REQUEST MATCHED — BloodBank Goa
+==========================================
+
+Request ID   : {data['request_id']}
+Hospital     : {data['hospital_name']}
+Blood Type   : {data['blood_type']}
+Units Needed : {data['units_needed']}
+Urgency      : {data['urgency']}
+
+✅ MATCHED DONOR DETAILS:
+--------------------------
+Name         : {data['donor_name']}
+Phone        : {data['donor_phone']}
+Email        : {data['donor_email']}
+City         : {data['donor_city']}
+Distance     : {data['distance_km']} km from hospital
+
+⚠️  Please contact the donor immediately!
+
+--
+BloodBank Goa — Powered by Google Cloud Platform
+    """
+    send_gmail(subject, body, ADMIN_ALERT_EMAIL)
+
+
+def send_no_match_email(data):
+    subject = f"⚠️ No Donor Found - {data['blood_type']} at {data['hospital_name']}"
+    body = f"""
+❌ NO DONOR MATCH FOUND — BloodBank Goa
+==========================================
+
+Request ID   : {data['request_id']}
+Hospital     : {data['hospital_name']}
+Blood Type   : {data['blood_type']}
+Units Needed : {data['units_needed']}
+Urgency      : {data['urgency']}
+
+No compatible donor is currently available.
+Please check the admin panel immediately and
+consider reaching out to nearby blood banks.
+
+--
+BloodBank Goa — Powered by Google Cloud Platform
+    """
+    send_gmail(subject, body, ADMIN_ALERT_EMAIL)
+
+
+# ── Pub/Sub PUBLISH ──────────────────────────────────────────────────────────
 def publish_alert(payload: dict):
     """Publish a blood-request alert to GCP Pub/Sub."""
     try:
@@ -36,7 +116,7 @@ def publish_alert(payload: dict):
         print(f"❌ Pub/Sub publish failed: {e}")
 
 
-# ── DATABASE ────────────────────────────────────────────────────────────────
+# ── DATABASE ─────────────────────────────────────────────────────────────────
 def get_db():
     return mysql.connector.connect(
         host=MYSQL_HOST,
@@ -46,8 +126,7 @@ def get_db():
     )
 
 
-# ── MATCHING LOGIC ──────────────────────────────────────────────────────────
-# Compatible blood types: what can a given blood type RECEIVE from
+# ── MATCHING LOGIC ────────────────────────────────────────────────────────────
 COMPATIBLE_DONORS = {
     "A+":  ["A+", "A-", "O+", "O-"],
     "A-":  ["A-", "O-"],
@@ -65,11 +144,7 @@ def calculate_distance(lat1, lon1, lat2, lon2):
 
 
 def find_nearest_donor(blood_type, hospital_lat, hospital_lon):
-    """
-    Find the nearest available donor compatible with blood_type,
-    using the requesting hospital's actual coordinates.
-    """
-    compatible = COMPATIBLE_DONORS.get(blood_type, [blood_type])
+    compatible   = COMPATIBLE_DONORS.get(blood_type, [blood_type])
     placeholders = ", ".join(["%s"] * len(compatible))
 
     db = get_db()
@@ -83,7 +158,7 @@ def find_nearest_donor(blood_type, hospital_lat, hospital_lon):
     cursor.close()
     db.close()
 
-    nearest = None
+    nearest  = None
     min_dist = float("inf")
 
     for d in donors:
@@ -93,12 +168,12 @@ def find_nearest_donor(blood_type, hospital_lat, hospital_lon):
         )
         if dist < min_dist:
             min_dist = dist
-            nearest = d
+            nearest  = d
 
-    return nearest, round(min_dist * 111, 2)   # convert degrees → km
+    return nearest, round(min_dist * 111, 2)
 
 
-# ── MAP SUPPORT ─────────────────────────────────────────────────────────────
+# ── MAP SUPPORT ──────────────────────────────────────────────────────────────
 def get_all_donors():
     db = get_db()
     cursor = db.cursor(dictionary=True)
@@ -112,7 +187,7 @@ def get_all_donors():
     return donors
 
 
-# ── HOME ─────────────────────────────────────────────────────────────────────
+# ── HOME ──────────────────────────────────────────────────────────────────────
 @app.route("/")
 def home():
     db = get_db()
@@ -144,7 +219,7 @@ def home():
     )
 
 
-# ── LOGIN ────────────────────────────────────────────────────────────────────
+# ── LOGIN ─────────────────────────────────────────────────────────────────────
 @app.route("/login")
 def login():
     if session.get("logged_in"):
@@ -170,14 +245,14 @@ def login_callback():
     token_resp = http_requests.post(
         GOOGLE_TOKEN_URL,
         data={
-            "code": code,
-            "client_id": GOOGLE_CLIENT_ID,
+            "code":          code,
+            "client_id":     GOOGLE_CLIENT_ID,
             "client_secret": GOOGLE_CLIENT_SECRET,
-            "redirect_uri": REDIRECT_URI,
-            "grant_type": "authorization_code",
+            "redirect_uri":  REDIRECT_URI,
+            "grant_type":    "authorization_code",
         },
     )
-    token_data  = token_resp.json()
+    token_data   = token_resp.json()
     access_token = token_data.get("access_token")
     if not access_token:
         return redirect(url_for("login"))
@@ -202,7 +277,7 @@ def logout():
     return redirect(url_for("home"))
 
 
-# ── DONOR ────────────────────────────────────────────────────────────────────
+# ── DONOR ─────────────────────────────────────────────────────────────────────
 ADMIN_EMAILS = [
     "msci.2323@unigoa.ac.in",
     "msci.2312@unigoa.ac.in",
@@ -279,7 +354,7 @@ def donor_register():
     return redirect(url_for("donor", success=1))
 
 
-# ── HOSPITAL ─────────────────────────────────────────────────────────────────
+# ── HOSPITAL ──────────────────────────────────────────────────────────────────
 @app.route("/hospital")
 @app.route("/hospital/")
 def hospital():
@@ -323,7 +398,7 @@ def hospital():
     )
 
 
-# ── HOSPITAL REQUEST (with matching + Pub/Sub) ───────────────────────────────
+# ── HOSPITAL REQUEST (with matching + Pub/Sub) ────────────────────────────────
 @app.route("/hospital/request", methods=["POST"])
 def hospital_request():
     db = get_db()
@@ -335,7 +410,7 @@ def hospital_request():
     units       = request.form["units_needed"]
     urgency     = request.form["urgency"]
 
-    # ── 1. Fetch requesting hospital's real coordinates ──────────────────────
+    # 1. Fetch hospital coordinates
     cursor.execute(
         "SELECT hospital_name, latitude, longitude FROM hospitals WHERE hospital_id = %s",
         (hospital_id,)
@@ -343,15 +418,14 @@ def hospital_request():
     hospital_row = cursor.fetchone()
 
     if hospital_row and hospital_row["latitude"] and hospital_row["longitude"]:
-        h_lat = float(hospital_row["latitude"])
-        h_lon = float(hospital_row["longitude"])
+        h_lat  = float(hospital_row["latitude"])
+        h_lon  = float(hospital_row["longitude"])
         h_name = hospital_row["hospital_name"]
     else:
-        # Fallback to Goa centroid if coords missing
         h_lat, h_lon = 15.2993, 74.1240
         h_name = hospital_id
 
-    # ── 2. Insert request into DB ─────────────────────────────────────────────
+    # 2. Insert request into DB
     cursor.execute("""
         INSERT INTO blood_requests
         (request_id, hospital_id, blood_type, units_needed, urgency, status)
@@ -359,31 +433,32 @@ def hospital_request():
     """, (request_id, hospital_id, blood_type, units, urgency))
     db.commit()
 
-    # ── 3. Run matching engine ────────────────────────────────────────────────
+    # 3. Run matching engine
     nearest, dist_km = find_nearest_donor(blood_type, h_lat, h_lon)
 
     if nearest:
         print(f"✅ MATCH: {nearest['full_name']} ({nearest['blood_type']}) — {dist_km} km away")
 
-        # ── 4. Publish alert to Pub/Sub ───────────────────────────────────────
-        publish_alert({
-            "event":        "BLOOD_REQUEST_MATCHED",
-            "request_id":   request_id,
-            "hospital_id":  hospital_id,
+        payload = {
+            "event":         "BLOOD_REQUEST_MATCHED",
+            "request_id":    request_id,
+            "hospital_id":   hospital_id,
             "hospital_name": h_name,
-            "blood_type":   blood_type,
-            "units_needed": units,
-            "urgency":      urgency,
-            "donor_id":     nearest["donor_id"],
-            "donor_name":   nearest["full_name"],
-            "donor_phone":  nearest["phone"],
-            "donor_email":  nearest["email"],
-            "donor_city":   nearest["city"],
-            "distance_km":  dist_km,
-        })
+            "blood_type":    blood_type,
+            "units_needed":  units,
+            "urgency":       urgency,
+            "donor_id":      nearest["donor_id"],
+            "donor_name":    nearest["full_name"],
+            "donor_phone":   nearest["phone"],
+            "donor_email":   nearest["email"],
+            "donor_city":    nearest["city"],
+            "distance_km":   dist_km,
+        }
 
-        # ── 5. Optionally mark donor as temporarily unavailable ───────────────
-        # Uncomment to prevent double-matching on the same donor:
+        # 4. Publish to Pub/Sub
+        publish_alert(payload)
+
+        # 5. Uncomment to mark donor unavailable after matching:
         # cursor.execute(
         #     "UPDATE donors SET is_available = 0 WHERE donor_id = %s",
         #     (nearest["donor_id"],)
@@ -393,15 +468,14 @@ def hospital_request():
     else:
         print(f"❌ NO MATCH found for blood type {blood_type} near {h_name}")
 
-        # Publish a no-match alert so admins are notified
         publish_alert({
-            "event":        "BLOOD_REQUEST_NO_MATCH",
-            "request_id":   request_id,
-            "hospital_id":  hospital_id,
+            "event":         "BLOOD_REQUEST_NO_MATCH",
+            "request_id":    request_id,
+            "hospital_id":   hospital_id,
             "hospital_name": h_name,
-            "blood_type":   blood_type,
-            "units_needed": units,
-            "urgency":      urgency,
+            "blood_type":    blood_type,
+            "units_needed":  units,
+            "urgency":       urgency,
         })
 
     cursor.close()
@@ -410,7 +484,7 @@ def hospital_request():
     return redirect(url_for("hospital", success=1))
 
 
-# ── Pub/Sub PUSH ENDPOINT (subscriber webhook) ───────────────────────────────
+# ── Pub/Sub PUSH ENDPOINT ─────────────────────────────────────────────────────
 @app.route("/pubsub/push", methods=["POST"])
 def pubsub_push():
     """
@@ -426,7 +500,6 @@ def pubsub_push():
     if not envelope or "message" not in envelope:
         return "Bad Request", 400
 
-    import base64
     raw   = envelope["message"].get("data", "")
     data  = json.loads(base64.b64decode(raw).decode("utf-8"))
     event = data.get("event")
@@ -434,18 +507,15 @@ def pubsub_push():
     print(f"📨 Pub/Sub push received: {event}")
 
     if event == "BLOOD_REQUEST_MATCHED":
-        # ── Example: send SMS via Twilio / email via SendGrid ─────────────────
-        # send_sms(data["donor_phone"], build_donor_sms(data))
-        # send_email(data["donor_email"], build_donor_email(data))
         print(
             f"  → Donor {data['donor_name']} ({data['donor_phone']}) "
             f"needed at {data['hospital_name']} for {data['blood_type']}"
         )
+        send_matched_email(data)
 
     elif event == "BLOOD_REQUEST_NO_MATCH":
-        # ── Example: alert admin via email ────────────────────────────────────
-        # send_admin_alert(data)
         print(f"  → No match for {data['blood_type']} at {data['hospital_name']}")
+        send_no_match_email(data)
 
     # Must return 2xx so Pub/Sub doesn't retry
     return "OK", 200
